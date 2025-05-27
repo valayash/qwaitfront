@@ -27,15 +27,15 @@ import WaitlistStyles from './WaitlistStyles';
 // import Toast from './Toast'; // If you have a separate Toast.jsx
 
 // Helper function to transform API/WebSocket entry to component's expected structure
-const transformApiEntryToComponentFormat = (apiEntry, existingEntries = []) => {
-  // Try to find the existing entry's position or assign a new one
-  let position;
-  const existingEntry = existingEntries.find(e => e.id === apiEntry.id);
-  if (existingEntry) {
-    position = existingEntry.position;
-  } else {
-    // For new entries, assign next available position or rely on sorting
-    position = existingEntries.length + 1;
+const transformApiEntryToComponentFormat = (apiEntry) => {
+  let calculatedWaitTimeMinutes = 0;
+  if (apiEntry.timestamp && (apiEntry.status === 'WAITING' || apiEntry.status === 'NOTIFIED')) {
+    const arrivalTime = new Date(apiEntry.timestamp);
+    const now = new Date();
+    const diffMilliseconds = now.getTime() - arrivalTime.getTime();
+    calculatedWaitTimeMinutes = Math.max(0, Math.floor(diffMilliseconds / (1000 * 60)));
+  } else if (apiEntry.wait_time_minutes) {
+    calculatedWaitTimeMinutes = apiEntry.wait_time_minutes;
   }
 
   return {
@@ -43,16 +43,34 @@ const transformApiEntryToComponentFormat = (apiEntry, existingEntries = []) => {
     customerName: apiEntry.customer_name || '',
     phoneNumber: apiEntry.phone_number || '',
     peopleCount: apiEntry.people_count || 0,
-    timestamp: apiEntry.timestamp || '', // Original timestamp from backend
-    // arrivalTime: apiEntry.arrival_time, // If your backend sends this pre-formatted
-    waitTimeMinutes: apiEntry.wait_time_minutes || 0, // This will be updated by interval or from backend
+    timestamp: apiEntry.timestamp || '',
+    waitTimeMinutes: calculatedWaitTimeMinutes,
     status: apiEntry.status || 'WAITING',
     notes: apiEntry.notes || '',
-    isReservation: (apiEntry.notes || '').includes('Reservation for'), // Or a dedicated field
-    position: position, // Maintain or assign position
+    isReservation: (apiEntry.notes || '').includes('Reservation for'),
+    // position is no longer set here; it will be handled by assignPositions
   };
 };
 
+// Helper function to sort entries and assign positions
+const assignPositions = (entries) => {
+  const sortedEntries = [...entries].sort((a, b) => {
+    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    if (timeA === 0 && timeB === 0) return 0; // both no timestamp
+    if (timeA === 0) return 1; // a comes after b if a has no timestamp
+    if (timeB === 0) return -1; // b comes after a if b has no timestamp
+    return timeA - timeB;
+  });
+
+  let currentPosition = 1;
+  return sortedEntries.map(entry => {
+    if (entry.status === 'WAITING' || entry.status === 'NOTIFIED') {
+      return { ...entry, position: currentPosition++ };
+    }
+    return { ...entry, position: null }; // Assign null for non-active entries
+  });
+};
 
 const Waitlist = () => {
   const navigate = useNavigate();
@@ -104,6 +122,22 @@ const Waitlist = () => {
     setToast(null);
   }, [setToast]);
 
+  const handleDownloadQRCode = () => {
+    if (qrCodeURL) {
+      const link = document.createElement('a');
+      link.href = qrCodeURL;
+      // Sanitize restaurant name for filename
+      const fileName = `${restaurantName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr_code.png`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('QR Code download started!', 'info');
+    } else {
+      showToast('QR Code not available for download.', 'error');
+    }
+  };
+
   // Fetch waitlist data from API with loading state
   const loadWaitlistData = useCallback(async () => {
     console.log('Attempting to load initial waitlist data...');
@@ -121,10 +155,10 @@ const Waitlist = () => {
       if (data.restaurant?.id) setRestaurantId(data.restaurant.id); // IMPORTANT: Sets restaurantId
 
       if (data.queue_entries && Array.isArray(data.queue_entries)) {
-        const transformedEntries = data.queue_entries.map((entry, index) =>
-          transformApiEntryToComponentFormat(entry, data.queue_entries) // Pass all entries for context
+        const transformedEntries = data.queue_entries.map(entry =>
+          transformApiEntryToComponentFormat(entry) // Simplified call
         );
-        setWaitlistEntries(transformedEntries);
+        setWaitlistEntries(assignPositions(transformedEntries)); // Use assignPositions
       } else {
         console.warn('No queue entries in API response or unexpected format:', data);
         setWaitlistEntries([]);
@@ -177,9 +211,9 @@ const Waitlist = () => {
       case 'NEW_WAITLIST_ENTRY':
         {
           setWaitlistEntries(prevEntries => {
-            const newEntry = transformApiEntryToComponentFormat(payloadEntry, prevEntries);
+            const newEntry = transformApiEntryToComponentFormat(payloadEntry);
             if (prevEntries.some(e => e.id === newEntry.id)) return prevEntries;
-            return [...prevEntries, newEntry].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+            return assignPositions([...prevEntries, newEntry]);
           });
           showToast(`New party "${payloadEntry.customer_name || 'Unknown'}" joined the waitlist!`, 'info');
           break;
@@ -187,14 +221,20 @@ const Waitlist = () => {
       case 'ENTRY_UPDATED':
         {
           setWaitlistEntries(prevEntries => {
-            const receivedEntry = transformApiEntryToComponentFormat(payloadEntry, prevEntries);
-            const entryExists = prevEntries.some(entry => entry.id === receivedEntry.id);
+            const receivedEntry = transformApiEntryToComponentFormat(payloadEntry);
+            let entryExists = false;
+            const updatedList = prevEntries.map(entry => {
+              if (entry.id === receivedEntry.id) {
+                entryExists = true;
+                return { ...entry, ...receivedEntry };
+              }
+              return entry;
+            });
             if (entryExists) {
-              return prevEntries.map(entry =>
-                entry.id === receivedEntry.id ? { ...entry, ...receivedEntry } : entry
-              ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+              return assignPositions(updatedList);
             } else {
-              return [...prevEntries, receivedEntry].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+              // If entry wasn't found, add it to the list
+              return assignPositions([...prevEntries, receivedEntry]);
             }
           });
           showToast(`Waitlist updated for "${payloadEntry.customer_name || 'Unknown'}".`, 'info');
@@ -207,7 +247,8 @@ const Waitlist = () => {
           setWaitlistEntries(prevEntries => {
             const entryToRemove = prevEntries.find(e => e.id === removedEntryId);
             if (entryToRemove) partyName = entryToRemove.customerName;
-            return prevEntries.filter(entry => entry.id !== removedEntryId);
+            const filteredEntries = prevEntries.filter(entry => entry.id !== removedEntryId);
+            return assignPositions(filteredEntries);
           });
           showToast(`Party "${partyName}" removed from waitlist.`, 'info');
           break;
@@ -239,15 +280,69 @@ const Waitlist = () => {
 
   // --- End WebSocket Integration ---
 
-
-  const loadQRCode = async () => { /* ... your existing loadQRCode ... */ };
-  useEffect(() => { if (showQRModal) loadQRCode(); }, [showQRModal]);
-
+  // --- Wait Time Updater ---
   useEffect(() => {
-    const updateWaitTimes = () => { /* ... your existing updateWaitTimes ... */ };
-    waitTimeIntervalRef.current = setInterval(updateWaitTimes, 30000);
-    return () => { if (waitTimeIntervalRef.current) clearInterval(waitTimeIntervalRef.current); };
-  }, []); // Keep this for local wait time updates if desired
+    const updateWaitTimes = () => {
+      setWaitlistEntries(prevEntries =>
+        prevEntries.map(entry => {
+          if (entry.status !== 'WAITING' && entry.status !== 'NOTIFIED') {
+            return entry; // Don't update wait time for served/cancelled parties
+          }
+          if (!entry.timestamp) {
+            return { ...entry, waitTimeMinutes: 0 }; // Should not happen if timestamp is always set
+          }
+          const arrivalTime = new Date(entry.timestamp);
+          const now = new Date();
+          const diffMilliseconds = now.getTime() - arrivalTime.getTime();
+          const waitTimeMinutes = Math.max(0, Math.floor(diffMilliseconds / (1000 * 60)));
+          return { ...entry, waitTimeMinutes };
+        })
+      );
+    };
+
+    // Update immediately on load and then set interval
+    updateWaitTimes(); 
+    waitTimeIntervalRef.current = setInterval(updateWaitTimes, 30000); // Update every 30 seconds
+
+    return () => {
+      if (waitTimeIntervalRef.current) {
+        clearInterval(waitTimeIntervalRef.current);
+      }
+    };
+  }, []); // Empty dependency array: run once on mount, cleanup on unmount. 
+          // If entries were not updating, it might be because `waitlistEntries` was in dependency array causing loop.
+  // --- End Wait Time Updater ---
+
+  const loadQRCode = async () => {
+    try {
+      console.log('Loading QR code data...');
+      setIsLoading(true); // Show loading indicator while fetching
+      
+      const { qr_code, join_url } = await fetchQRCode();
+      console.log('QR code loaded:', qr_code ? 'QR code available' : 'QR code missing');
+      console.log('Join URL:', join_url);
+      
+      // Only update state if we actually have data
+      if (qr_code) {
+        setQrCodeURL(qr_code);
+      } else {
+        console.error('QR code data is empty or invalid');
+        showToast('Failed to load QR code. Please try again later.', 'error');
+      }
+      
+      if (join_url) {
+        setJoinURL(join_url);
+      } else {
+        console.error('Join URL is empty or invalid');
+      }
+    } catch (err) {
+      console.error('Error loading QR code:', err);
+      showToast('Failed to load QR code. Please try again later.', 'error');
+    } finally {
+      setIsLoading(false); // Hide loading indicator
+    }
+  };
+  useEffect(() => { if (showQRModal) loadQRCode(); }, [showQRModal]);
 
   const filteredEntries = waitlistEntries.filter(entry => {
     const searchTermLower = searchTerm.toLowerCase();
@@ -258,17 +353,64 @@ const Waitlist = () => {
     return (nameMatch || phoneMatch) && statusMatch;
   });
 
-  const handleLogout = async () => { /* ... your existing logout ... */ };
+  const handleLogout = async () => {
+    try {
+      // Call the authentication service to log out
+      await logout();
+      // Navigate to login page
+      navigate('/login');
+    } catch (err) {
+      console.error('Error logging out:', err);
+      // Still navigate to login
+      navigate('/login');
+    }
+  };
   const openQRModal = () => setShowQRModal(true);
   const closeQRModal = () => setShowQRModal(false);
-  const copyJoinLink = () => { /* ... your existing copy link ... */ };
+  const copyJoinLink = () => {
+    navigator.clipboard.writeText(joinURL);
+    alert('Link copied to clipboard!');
+  };
   const openAddModal = () => setShowAddModal(true);
   const closeAddModal = () => setShowAddModal(false);
-  const openEditModal = (entry) => { /* ... your existing open edit ... */ };
-  const closeEditModal = () => { /* ... your existing close edit ... */ };
-  const openColumnModal = () => { /* ... your existing open column modal ... */ };
+  const openEditModal = (entry) => {
+    setSelectedEntry(entry);
+    setEditFormData({
+      customer_name: entry.customerName,
+      phone_number: entry.phoneNumber,
+      people_count: entry.peopleCount.toString(),
+      quoted_time: entry.waitTimeMinutes.toString(),
+      notes: entry.notes
+    });
+    setShowEditModal(true);
+  };    
+  const closeEditModal = () => {
+    setSelectedEntry(null);
+    setEditFormData({
+      customer_name: '',
+      phone_number: '',
+      people_count: '',
+      quoted_time: '',
+      notes: ''
+    });
+    setShowEditModal(false);
+  };
+  const openColumnModal = () => {
+    // Initialize column selections from current visible columns
+    setColumnSelections([...visibleColumns]);
+    setShowColumnModal(true);
+  };
   const closeColumnModal = () => setShowColumnModal(false);
-  const handleColumnSelectionChange = (column) => { /* ... your existing column selection ... */ };
+  const handleColumnSelectionChange = (column) => {
+    setColumnSelections(prev => {
+      // If column is already selected, remove it
+      if (prev.includes(column)) {
+        return prev.filter(col => col !== column);
+      }
+      // Otherwise add it
+      return [...prev, column];
+    });
+  };
 
 
   const handleColumnSettingsSubmit = async (e) => {
@@ -347,10 +489,39 @@ const Waitlist = () => {
     }
   };
 
-  useEffect(() => { if (!showAddModal) { /* ... reset formData ... */ } }, [showAddModal]);
-  const handleInputChange = (e) => { /* ... your existing input change ... */ };
-  const handleSizeSelect = (size) => { /* ... your existing size select ... */ };
-  const adjustQuotedTime = (amount) => { /* ... your existing adjust time ... */ };
+  useEffect(() => {
+    if (!showAddModal) {
+      // Reset form when modal closes
+      setFormData({
+        customer_name: '',
+        phone_number: '',
+        people_count: '',
+        quoted_time: '15',
+        notes: ''
+      });
+    }
+  }, [showAddModal]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+  const handleSizeSelect = (size) => {
+    setFormData({
+      ...formData,
+      people_count: size.toString()
+    });
+  };
+  const adjustQuotedTime = (amount) => {
+    const currentTime = parseInt(formData.quoted_time) || 15;
+    const newTime = Math.max(5, currentTime + amount); // Ensure minimum of 5 minutes
+    setFormData({
+      ...formData,
+      quoted_time: newTime.toString()
+    });
+  };
 
   const handleAddPartySubmit = async (e) => {
     e.preventDefault();
@@ -374,10 +545,26 @@ const Waitlist = () => {
     }
   };
 
-  const handleEditInputChange = (e) => { /* ... your existing edit input change ... */ };
-  const handleEditSizeSelect = (size) => { /* ... your existing edit size select ... */ };
-  const adjustEditQuotedTime = (amount) => { /* ... your existing edit adjust time ... */ };
-
+  const handleEditInputChange = (e) => { 
+     const { name, value } = e.target;
+     setEditFormData({
+       ...editFormData,
+        [name]: value
+    }); 
+  };
+  const handleEditSizeSelect = (size) => { setEditFormData({
+    ...editFormData,
+    people_count: size.toString()
+  }); };
+    // Handle quoted time adjustment in edit modal
+  const adjustEditQuotedTime = (amount) => {
+    const currentTime = parseInt(editFormData.quoted_time) || 15;
+    const newTime = Math.max(5, currentTime + amount); // Ensure minimum of 5 minutes
+    setEditFormData({
+      ...editFormData,
+      quoted_time: newTime.toString()
+    });
+  };
   const handleEditPartySubmit = async (e) => {
     e.preventDefault();
     if (!selectedEntry) return;
@@ -451,6 +638,7 @@ const Waitlist = () => {
         qrCodeURL={qrCodeURL}
         joinURL={joinURL}
         copyJoinLink={copyJoinLink}
+        handleDownloadQRCode={handleDownloadQRCode}
       />
       <AddPartyModal 
         showAddModal={showAddModal}

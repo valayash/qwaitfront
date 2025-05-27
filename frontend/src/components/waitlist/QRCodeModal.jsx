@@ -1,6 +1,6 @@
 import React from 'react';
 
-const QRCodeModal = ({ showQRModal, closeQRModal, restaurantName, qrCodeURL, joinURL, copyJoinLink }) => {
+const QRCodeModal = ({ showQRModal, closeQRModal, restaurantName, qrCodeURL, joinURL, copyJoinLink, handleDownloadQRCode }) => {
   if (!showQRModal) return null;
   
   // Check if QR code is available
@@ -28,6 +28,15 @@ const QRCodeModal = ({ showQRModal, closeQRModal, restaurantName, qrCodeURL, joi
                 <p className="text-sm">Please try again later</p>
               </div>
             </div>
+          )}
+          
+          {isQRCodeAvailable && (
+            <button 
+              onClick={handleDownloadQRCode}
+              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out"
+            >
+              <i className="fas fa-download mr-2"></i>Download QR Code
+            </button>
           )}
           
           <div className="w-full mb-4">

@@ -88,14 +88,21 @@ const WaitlistTable = ({
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">{entry.customerName}</div>
+                  {typeof entry.position === 'number' && (
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                      <span className="text-blue-700 font-semibold">{entry.position}</span>
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-lg font-medium text-gray-900">{entry.customerName}</div>
                     <div className="text-sm text-gray-500">{entry.phoneNumber}</div>
                   </div>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">{entry.peopleCount}</div>
+                <span className="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                  {entry.peopleCount} {entry.peopleCount === 1 ? 'person' : 'people'}
+                </span>
               </td>
               {visibleColumns.includes('arrival_time') && (
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -120,21 +127,24 @@ const WaitlistTable = ({
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <button
                   onClick={() => openEditModal(entry)}
-                  className="text-indigo-600 hover:text-indigo-900 mr-3"
+                  className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mr-2 transition duration-150 ease-in-out"
+                  title="Edit Party"
                 >
-                  Edit
+                  <i className="fas fa-pencil-alt"></i>
                 </button>
                 <button
                   onClick={() => handleStatusChange(entry.id, 'SERVED')}
-                  className="text-green-600 hover:text-green-900 mr-3"
+                  className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 mr-2 transition duration-150 ease-in-out"
+                  title="Serve Party"
                 >
-                  Serve
+                  <i className="fas fa-check"></i>
                 </button>
                 <button
                   onClick={() => handleRemove(entry.id)}
-                  className="text-red-600 hover:text-red-900"
+                  className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                  title="Remove Party"
                 >
-                  Remove
+                  <i className="fas fa-times"></i>
                 </button>
               </td>
             </tr>
