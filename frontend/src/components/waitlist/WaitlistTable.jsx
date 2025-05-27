@@ -10,7 +10,8 @@ const WaitlistTable = ({
   openQRModal,
   openEditModal,
   handleStatusChange,
-  handleRemove
+  handleRemove,
+  isActionLoading
 }) => {
   if (loading) {
     return (

@@ -20,6 +20,11 @@ queue_entry_created = Signal()
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Imports for WebSocket broadcast
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from ..serializers import QueueEntrySerializer
+
 @require_GET
 def customer_home(request):
     """API endpoint for customer home page data."""
@@ -134,6 +139,21 @@ def join_queue_submit(request, restaurant_id):
             timestamp=timezone.now()
         )
         
+        # --- Send WebSocket Update via Django Channels ---
+        channel_layer = get_channel_layer()
+        group_name = f"waitlist_{restaurant.id}" 
+        message_data = QueueEntrySerializer(entry).data
+        
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'send.waitlist.update', 
+                'data': message_data
+            }
+        )
+        logger.info(f"Sent Channels update to group {group_name} for new entry {entry.id}")
+        # --- End WebSocket Update ---
+
         # Calculate position and wait time
         queue_entries = QueueEntry.objects.filter(
             restaurant=restaurant, 

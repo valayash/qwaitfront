@@ -43,29 +43,3 @@ def update_party_from_queue_entry(sender, instance, created, **kwargs):
     
     party.save()
 
-@receiver(queue_entry_created)
-def handle_queue_entry_created(sender, instance, restaurant, **kwargs):
-    """
-    Handles the queue_entry_created signal.
-    Previously, this fetched the updated queue and emitted it via Socket.IO.
-    Now, it will just log the event.
-    """
-    logger.info(f"Queue entry {instance.id} created for restaurant {restaurant.name}. (Socket.IO update was here)")
-    
-    # Code to fetch and emit via Socket.IO has been removed.
-    # If you re-implement real-time updates, this is where you'd integrate it.
-
-    # Example of fetching queue entries if needed for other purposes:
-    # reservation_entries = QueueEntry.objects.filter(
-    #     restaurant=restaurant,
-    #     status='WAITING',
-    #     notes__contains="Reservation for"
-    # ).order_by('timestamp')
-    # regular_entries = QueueEntry.objects.filter(
-    #     restaurant=restaurant,
-    #     status='WAITING'
-    # ).exclude(
-    #     notes__contains="Reservation for"
-    # ).order_by('timestamp')
-    # all_queue_entries = list(reservation_entries) + list(regular_entries)
-    # logger.info(f"Current queue count for {restaurant.name}: {len(all_queue_entries)}")

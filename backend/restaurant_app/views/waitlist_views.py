@@ -15,6 +15,13 @@ import qrcode
 from io import BytesIO
 import base64
 
+# Imports for WebSocket broadcast
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from ..serializers import QueueEntrySerializer # Assuming this is your serializer
+# If WAITLIST_GROUP_NAME is static, import it. Otherwise, construct dynamically.
+# from ..consumers import WAITLIST_GROUP_NAME 
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -445,6 +452,8 @@ def api_waitlist_data(request):
     API endpoint that returns waitlist data in JSON format for the React frontend
     Also handles adding new parties when received as a POST request
     """
+    # If this view is public for join-queue, restaurant might come from URL or data, not request.user
+    # For now, keeping existing logic for restaurant retrieval.
     restaurant = Restaurant.objects.get(user=request.user)
     
     # Handle POST request to add a new party
@@ -476,10 +485,9 @@ def api_waitlist_data(request):
                     'success': False,
                     'message': str(e)
                 }, status=400)
-            
-            # Create new queue entry
+
             entry = QueueEntry.objects.create(
-                restaurant=restaurant,
+                restaurant=restaurant, # Ensure this restaurant is correct for the join-queue context
                 customer_name=customer_name,
                 phone_number=phone_number,
                 people_count=people_count,
@@ -489,13 +497,27 @@ def api_waitlist_data(request):
                 status='WAITING'
             )
             
-            # Get updated queue entries for Socket.IO update
-            queue_entries = QueueEntry.objects.filter(
-                restaurant=restaurant, 
-                status='WAITING'
-            ).order_by('timestamp')
+            # --- Send WebSocket Update ---
+            channel_layer = get_channel_layer()
+            group_name = f"waitlist_{restaurant.id}" # Dynamic group name
+            message_data = QueueEntrySerializer(entry).data
             
-            # Return success response
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    'type': 'send.waitlist.update', # Corresponds to a method in your consumer
+                    'data': message_data
+                }
+            )
+            print(f"Sent update to group {group_name} for new entry {entry.id}")
+            # --- End WebSocket Update ---
+            
+            # Get updated queue entries for Socket.IO update (This seems redundant if WebSocket is primary)
+            # queue_entries = QueueEntry.objects.filter(
+            #     restaurant=restaurant, 
+            #     status='WAITING'
+            # ).order_by('timestamp')
+            
             return JsonResponse({
                 'success': True,
                 'message': f'Party added successfully. Quoted wait time: {quoted_time if quoted_time else "Not set"} minutes',
@@ -602,10 +624,10 @@ from ..serializers import QueueEntrySerializer
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from ..consumers import WAITLIST_GROUP_NAME # Import the group name
+# from ..consumers import WAITLIST_GROUP_NAME # Import the group name
 
 class WaitlistEntryListCreateView(generics.ListCreateAPIView):
-    queryset = QueueEntry.objects.filter(status="Waiting").order_by('submitted_at')
+    queryset = QueueEntry.objects.filter(status="Waiting").order_by('timestamp')
     serializer_class = QueueEntrySerializer
 
     def perform_create(self, serializer):
@@ -621,10 +643,10 @@ class WaitlistEntryListCreateView(generics.ListCreateAPIView):
 
         # Send message to the waitlist group
         async_to_sync(channel_layer.group_send)(
-            WAITLIST_GROUP_NAME,
+            # WAITLIST_GROUP_NAME,
             {
                 'type': 'send.waitlist.update', # This will call send_waitlist_update in consumer
                 'data': message_data
             }
         )
-        print(f"Sent update to group {WAITLIST_GROUP_NAME}")
+        print(f"Sent update to group ")

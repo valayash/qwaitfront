@@ -26,6 +26,7 @@ from .waitlist_views import (
     api_qrcode,
     edit_entry,
     edit_party,
+    WaitlistEntryListCreateView,
 )
 
 # Reservation views
@@ -79,7 +80,7 @@ __all__ = [
     'update_columns', 'add_party', 'remove_entry', 'mark_as_served', 
     'edit_entry', 'edit_party', 'get_entry', 'get_recent_activity',
     'refresh_queue_view', 'get_formatted_queue_entries', 'api_waitlist_data', 'api_qrcode',
-    
+    'WaitlistEntryListCreateView',
     # Reservation views
     'reservations', 'add_reservation', 'edit_reservation',
     'delete_reservation', 'check_in_reservation', 'get_reservation',

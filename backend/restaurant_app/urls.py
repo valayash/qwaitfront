@@ -5,7 +5,7 @@ from .views import (
     
     # Waitlist views
     update_columns, add_party, remove_entry, mark_as_served, edit_entry, edit_party,
-    get_entry, get_recent_activity, refresh_queue_view, api_waitlist_data, api_qrcode,
+    get_entry, get_recent_activity, refresh_queue_view, api_waitlist_data, api_qrcode, WaitlistEntryListCreateView,
     
     # Reservation views
     reservations, add_reservation, edit_reservation, delete_reservation, 
@@ -38,6 +38,7 @@ urlpatterns = [
     path('waitlist/update-columns/', update_columns, name='update_columns'),
     path('waitlist/add-party/', add_party, name='add_party'),
     path('waitlist/refresh/', refresh_queue_view, name='refresh_queue'),
+    path('api/waitlist/', WaitlistEntryListCreateView.as_view(), name='waitlist-list-create'),
     
     # Recent Activity page endpoints
     path('recent-activity/', recent_activity, name='recent_activity'),
