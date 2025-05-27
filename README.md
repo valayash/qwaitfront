@@ -1,46 +1,95 @@
-# Getting Started with Create React App
+# Waitlist Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A real-time restaurant waitlist management application with Django backend and React frontend.
 
-## Available Scripts
+## System Components
 
-In the project directory, you can run:
+### Backend
 
-### `npm start`
+- **Django Server**: Main application backend running on port 8000
+- **Socket.IO Server**: Real-time notification server running on port 3000
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Frontend
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- **React Application**: User interface running on port 3001
 
-### `npm test`
+## Socket.IO Server Management
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The Socket.IO server is essential for real-time updates. Several tools are available to manage it:
 
-### `npm run build`
+### Socket.IO Server Manager
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# Check server status
+node socket_server_manager.js status
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Start the server
+node socket_server_manager.js start
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Stop the server
+node socket_server_manager.js stop
 
-### `npm run eject`
+# Restart the server
+node socket_server_manager.js restart
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Health Check
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+To quickly check if the Socket.IO server is running properly:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+node check_socketio.js
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Setup and Running the Application
 
-## Learn More
+### Backend Setup
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Set up Python virtual environment:
+   ```bash
+   cd backend
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+2. Run Django migrations:
+   ```bash
+   python manage.py migrate
+   ```
+
+3. Start Django server:
+   ```bash
+   python manage.py runserver
+   ```
+
+4. Start Socket.IO server:
+   ```bash
+   node socket_server_manager.js start
+   ```
+
+### Frontend Setup
+
+1. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Start development server:
+   ```bash
+   npm start
+   ```
+
+## Troubleshooting
+
+If you experience issues with real-time updates:
+
+1. Check Socket.IO server status:
+   ```bash
+   node socket_server_manager.js status
+   ```
+
+2. Ensure the Django backend is configured correctly to communicate with the Socket.IO server.
+
+3. Verify the frontend is connecting properly to the Socket.IO server using the browser's developer console. 

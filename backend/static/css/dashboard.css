@@ -1,0 +1,768 @@
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #1e1e2f;
+    color: #f5f5f5;
+}
+
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background-color: #121212;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.sidebar .brand-logo {
+    color: #76dcbf;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.sidebar ul li a:hover, .sidebar ul li a.active {
+    background-color: #76dcbf;
+    color: #121212;
+}
+
+.sidebar ul li a i {
+    margin-right: 10px;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 30px;
+    position: relative;
+}
+
+/* Top Bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.restaurant-info h3 {
+    font-size: 24px;
+    color: #76dcbf;
+}
+
+.queue-count {
+    background-color: #76dcbf;
+    color: #121212;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.qr-btn {
+    background: #76dcbf;
+    color: #121212;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: #1f1f2e;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.search-bar input {
+    border: none;
+    background: transparent;
+    color: #ccc;
+    padding: 5px 10px;
+    width: 200px;
+}
+
+.search-bar button {
+    background: transparent;
+    border: none;
+    color: #76dcbf;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* Empty Queue Section */
+.empty-queue {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.empty-queue-icon {
+    font-size: 60px;
+    color: #76dcbf;
+    margin-bottom: 20px;
+}
+
+.empty-queue h2 {
+    font-size: 24px;
+    color: #ccc;
+}
+
+.empty-queue p {
+    color: #aaa;
+}
+
+/* Queue Table */
+.queue-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.queue-table th, .queue-table td {
+    padding: 15px;
+    text-align: left;
+    border: 1px solid #333;
+}
+
+.queue-table th {
+    background: #2e2e40;
+    color: #ccc;
+}
+
+.queue-table td {
+    background: #1f1f2e;
+    color: #f5f5f5;
+}
+
+.remove-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.remove-btn i {
+    margin-right: 5px;
+}
+
+/* Add Party Button */
+.add-party-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #76dcbf;
+    color: #121212;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+/* Add Party Modal */
+.add-party-modal {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #1e1e2f;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    color: #f5f5f5;
+}
+
+.add-party-modal h2 {
+    color: #76dcbf;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.add-party-modal .form-group {
+    margin-bottom: 20px;
+}
+
+.add-party-modal .form-group label {
+    display: block;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.add-party-modal .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: #333;
+    color: #f5f5f5;
+}
+
+.add-party-modal .submit-btn {
+    background-color: #76dcbf;
+    padding: 10px 15px;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.add-party-modal .cancel-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #ccc;
+    text-decoration: none;
+}
+
+/* Floating Add Party Button */
+.add-party-btn {
+    font-size: 24px;
+    background-color: #76dcbf;
+    color: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    transition: transform 0.3s ease;
+}
+
+.add-party-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1e1e2f;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    text-align: center;
+    color: #76dcbf;
+    margin-bottom: 15px;
+}
+
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-content .form-group label {
+    display: block;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.modal-content .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: #f5f5f5;
+}
+
+.submit-btn, .cancel-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background-color: #76dcbf;
+    color: #121212;
+    border: none;
+}
+
+.cancel-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+/* Floating Add Button */
+.add-party-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #76dcbf;
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Actions Buttons: Display Side by Side */
+.action-buttons {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
+
+.action-buttons form,
+.action-buttons a {
+    margin: 0;
+}
+
+/* Button Styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1e1e2f;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+/* Remove Button */
+.remove-btn {
+    background-color: #f44336; /* Red color */
+}
+
+.remove-btn:hover {
+    background-color: #e53935;
+}
+
+/* Served Button */
+.served-btn {
+    background-color: #4CAF50; /* Green color */
+}
+
+.served-btn:hover {
+    background-color: #43a047;
+}
+
+/* Edit Button */
+.edit-btn {
+    background-color: #2196F3; /* Blue color */
+}
+
+.edit-btn:hover {
+    background-color: #1e88e5;
+}
+
+
+/* QR Code Button */
+.qr-btn {
+    background-color: #24275a;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.qr-btn:hover {
+    background-color: #333e7b;
+}
+
+.qr-btn i {
+    margin-right: 5px;
+}
+
+/* Modal Overlay for QR Code */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+/* QR Modal Styles - Similar to Add Party Form */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+#qr-modal .modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 450px;
+}
+
+#qr-modal h2 {
+    color: #24275a;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#qr-modal h3 {
+    color: #555;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#qr-modal .qr-container {
+    text-align: center;
+}
+
+#qr-modal .qr-code-img {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+}
+
+#qr-modal .join-link {
+    width: 80%;
+    padding: 10px;
+    margin: 10px auto 10px;
+    border: none;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    color: #333;
+    display: block;
+}
+
+#qr-modal .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+#qr-modal .btn {
+    padding: 12px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    text-align: center;
+}
+
+#qr-modal .copy-btn {
+    background-color: #24275a;
+    flex: 1;
+}
+
+#qr-modal .copy-btn:hover {
+    background-color: #1c1c1c;
+}
+
+
+
+
+/* Show QR Button */
+.qr-btn {
+    background-color: #24275a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    margin-right: 20px;
+}
+
+.qr-btn:hover {
+    background-color: #333e7b;
+}
+/* Recent Activity Table */
+.recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.recent-table th,
+.recent-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.recent-table th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    margin-top: 20px;
+    padding: 40px;
+    background-color: #ebf3fc;
+    border-radius: 8px;
+    color: #333;
+}
+
+.empty-state h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-size: 16px;
+}
+.undo-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.undo-btn:hover {
+    background-color: #1976D2;
+}
+
+.download-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin: 10px 5px;
+}
+
+.download-btn:hover {
+    background-color: #3a7bc8;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn i {
+    margin-right: 10px;
+}
+
+.queue-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.queue-table th, .queue-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+    font-size: 14px;
+}
+
+.queue-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.queue-table th i {
+    font-size: 10px;
+    margin-left: 5px;
+    color: #666;
+}
+
+.queue-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.queue-table tbody tr:hover {
+    background-color: #eee;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal-content h2 {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.phone-input {
+    display: flex;
+    gap: 10px;
+}
+
+.whatsapp-btn {
+    background-color: #25d366;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.size-options {
+    display: flex;
+    gap: 5px;
+}
+
+.size-btn {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.size-btn.selected {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.quoted-time-container {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.adjust-time-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+

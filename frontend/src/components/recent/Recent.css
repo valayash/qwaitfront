@@ -1,0 +1,100 @@
+/* Sidebar tooltip */
+.group:hover .group-hover\:block {
+  display: block;
+}
+
+.sidebar-tooltip {
+  visibility: hidden;
+  position: absolute;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.group:hover .sidebar-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Table styles */
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f9fafb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Modal animation */
+.modal-enter {
+  animation: modalEnter 0.3s forwards;
+}
+
+.modal-exit {
+  animation: modalExit 0.3s forwards;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Content transition */
+.content-enter {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  max-height: 0;
+  opacity: 0;
+}
+
+.content-enter-active {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.content-exit {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.content-exit-active {
+  max-height: 0;
+  opacity: 0;
+} 
