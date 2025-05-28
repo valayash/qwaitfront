@@ -5,7 +5,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
 from datetime import timedelta
 import json
-from ..models import Restaurant, QueueEntry, Reservation
+from ..models import Restaurant, QueueEntry, Reservation, Party
 from django.conf import settings
 import logging
 from ..utils import generate_qr_code
@@ -284,29 +284,28 @@ def update_settings(request):
 @login_required
 @require_GET
 def parties(request):
-    """API endpoint to get all served parties (history)."""
+    """API endpoint to get all parties for the restaurant."""
     restaurant = get_object_or_404(Restaurant, user=request.user)
     
-    # Get parties from QueueEntry model with SERVED status
-    served_parties = QueueEntry.objects.filter(
-        restaurant=restaurant,
-        status='SERVED'
-    ).order_by('-timestamp')[:100]  # Get last 100 served parties
+    # Get parties from the Party model
+    all_parties = Party.objects.filter(restaurant=restaurant).order_by('-created_at')[:100]  # Get last 100 parties
     
     # Format the parties data for the response
     parties_data = [{
         'id': party.id,
-        'customer_name': party.customer_name,
-        'phone_number': party.phone_number,
-        'people_count': party.people_count,
-        'notes': party.notes,
-        'timestamp': party.timestamp.isoformat() if party.timestamp else None,
-        'completion_time': party.completion_time.isoformat() if hasattr(party, 'completion_time') and party.completion_time else None,
-        'wait_time_minutes': (party.completion_time - party.timestamp).total_seconds() // 60 if hasattr(party, 'completion_time') and party.completion_time and party.timestamp else None
-    } for party in served_parties]
+        'name': party.name,
+        'phone': party.phone,
+        'visits': party.visits,
+        'last_visit': party.last_visit.isoformat() if party.last_visit else None,
+        'created_at': party.created_at.isoformat() if party.created_at else None,
+        'notes': party.notes
+    } for party in all_parties]
     
     return JsonResponse({
         'success': True,
+        'restaurant': {
+            'name': restaurant.name
+        },
         'parties': parties_data,
         'count': len(parties_data)
     })

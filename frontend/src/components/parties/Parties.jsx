@@ -17,7 +17,6 @@ import {
   faChartBar,
   faCog,
   faSignOutAlt,
-  faSort,
   faUserPlus,
   faPen,
   faTrash
@@ -82,6 +81,8 @@ const Parties = () => {
   useEffect(() => {
     loadParties();
   }, []);
+  
+  console.log('Inspecting Party Page Icons:', { faUserPlus, faPen, faTrash, faUserFriends }); // Added for debugging
   
   // Function to show toast messages
   const showToast = (message, type = 'success') => {
@@ -323,42 +324,42 @@ const Parties = () => {
                       />
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('name')}
                     >
-                      Name <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Name {sortField === 'name' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('phone')}
                     >
-                      Phone <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Phone {sortField === 'phone' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('visits')}
                     >
-                      Visits <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Visits {sortField === 'visits' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('last_visit')}
                     >
-                      Last Visit <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Last Visit {sortField === 'last_visit' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('notes')}
                     >
-                      Notes <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Notes {sortField === 'notes' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
                     <th 
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('created_at')}
                     >
-                      Create Time <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+                      Created At {sortField === 'created_at' && (sortDirection === 'asc' ? '▲' : '▼')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y">
@@ -375,39 +376,36 @@ const Parties = () => {
                         </td>
                         <td className="px-4 py-4 font-medium">{party.name}</td>
                         <td className="px-4 py-4">
-                          {/* Only show last 4 digits of phone number */}
-                          ******{party.phone.slice(-4)}
+                          {party.phone}
                         </td>
                         <td className="px-4 py-4">{party.visits}</td>
                         <td className="px-4 py-4">
                           {party.last_visit ? dateFns.format(new Date(party.last_visit), 'M/d/yyyy h:mm a') : '-'}
                         </td>
                         <td className="px-4 py-4">{party.notes || '-'}</td>
-                        <td className="px-4 py-4">{dateFns.format(new Date(party.created_at), 'M/d/yyyy h:mm a')}</td>
-                        <td className="px-4 py-4">
-                          <div className="flex space-x-2">
-                            <button 
-                              className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md" 
-                              title="Add to Waitlist"
-                              onClick={() => openAddToWaitlistModal(party)}
-                            >
-                              <FontAwesomeIcon icon={faUserPlus} />
-                            </button>
-                            <button 
-                              className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md" 
-                              title="Edit"
-                              onClick={() => openEditModal(party)}
-                            >
-                              <FontAwesomeIcon icon={faPen} />
-                            </button>
-                            <button 
-                              className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md" 
-                              title="Delete"
-                              onClick={() => handleDelete(party.id)}
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                          </div>
+                        <td className="px-4 py-4">{party.created_at ? dateFns.format(new Date(party.created_at), 'M/d/yyyy h:mm a') : '-'}</td>
+                        <td className="px-4 py-4 space-x-2">
+                          <button 
+                            className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md" 
+                            title="Add to Waitlist"
+                            onClick={() => openAddToWaitlistModal(party)}
+                          >
+                            <FontAwesomeIcon icon={faUserPlus} className="" />
+                          </button>
+                          <button 
+                            className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md" 
+                            title="Edit"
+                            onClick={() => openEditModal(party)}
+                          >
+                            <FontAwesomeIcon icon={faPen} className="" />
+                          </button>
+                          <button 
+                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md" 
+                            title="Delete"
+                            onClick={() => handleDelete(party.id)}
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="" />
+                          </button>
                         </td>
                       </tr>
                     ))
