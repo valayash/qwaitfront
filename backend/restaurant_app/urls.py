@@ -21,6 +21,9 @@ from .views import (
     # Utility views
     generate_qr_code, send_notification, get_analytics,
 )
+from .views.base_views import (
+    delete_party_view
+)
 
 # Group URLs by page they relate to
 urlpatterns = [
@@ -57,6 +60,7 @@ urlpatterns = [
     
     # Parties page endpoints
     path('parties/', parties, name='parties'),
+    path('parties/<int:party_id>/delete/', delete_party_view, name='delete_party'),
     
     # Analytics page endpoints
     path('analytics/', analytics, name='analytics'),

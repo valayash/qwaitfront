@@ -1,8 +1,12 @@
 import apiClient from './apiConfig';
 
-const fetchParties = async () => {
+const fetchParties = async (searchTerm = null) => {
   try {
-    const response = await apiClient.get('/parties/');
+    let url = '/parties/';
+    if (searchTerm) {
+      url += `?search=${encodeURIComponent(searchTerm)}`;
+    }
+    const response = await apiClient.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching parties:', error);

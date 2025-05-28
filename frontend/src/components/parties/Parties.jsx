@@ -60,6 +60,7 @@ const Parties = () => {
   const [showAddToWaitlistModal, setShowAddToWaitlistModal] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedParties, setSelectedParties] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Sort state
   const [sortField, setSortField] = useState('created_at');
@@ -82,6 +83,15 @@ const Parties = () => {
     loadParties();
   }, []);
   
+  // Effect to reload parties when searchTerm changes (debounced)
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      loadParties(searchTerm);
+    }, 300); // Debounce search by 300ms
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+  
   console.log('Inspecting Party Page Icons:', { faUserPlus, faPen, faTrash, faUserFriends }); // Added for debugging
   
   // Function to show toast messages
@@ -95,10 +105,10 @@ const Parties = () => {
   };
   
   // Load parties data from the API
-  const loadParties = async () => {
+  const loadParties = async (currentSearchTerm = searchTerm) => {
     setIsLoading(true);
     try {
-      const data = await fetchParties();
+      const data = await fetchParties(currentSearchTerm);
       setRestaurantName(data.restaurant.name);
       setParties(data.parties);
     } catch (error) {
@@ -302,6 +312,16 @@ const Parties = () => {
         <header className="bg-white shadow-sm sticky top-0 z-20">
           <div className="flex items-center justify-between px-6 py-4">
             <h1 className="text-xl font-bold text-gray-800">{restaurantName} - Parties</h1>
+            {/* Search Input */}
+            <div className="w-1/3">
+              <input 
+                type="text"
+                placeholder="Search by name, phone, notes..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </header>
 

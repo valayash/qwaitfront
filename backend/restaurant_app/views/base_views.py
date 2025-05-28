@@ -9,6 +9,7 @@ from ..models import Restaurant, QueueEntry, Reservation, Party
 from django.conf import settings
 import logging
 from ..utils import generate_qr_code
+from django.db.models import Q
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -284,11 +285,20 @@ def update_settings(request):
 @login_required
 @require_GET
 def parties(request):
-    """API endpoint to get all parties for the restaurant."""
+    """API endpoint to get all parties for the restaurant, with optional search."""
     restaurant = get_object_or_404(Restaurant, user=request.user)
+    search_query = request.GET.get('search', None)
     
-    # Get parties from the Party model
-    all_parties = Party.objects.filter(restaurant=restaurant).order_by('-created_at')[:100]  # Get last 100 parties
+    all_parties_query = Party.objects.filter(restaurant=restaurant)
+    
+    if search_query:
+        all_parties_query = all_parties_query.filter(
+            Q(name__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(notes__icontains=search_query)
+        )
+    
+    all_parties = all_parties_query.order_by('-created_at')[:100]
     
     # Format the parties data for the response
     parties_data = [{
@@ -309,6 +319,18 @@ def parties(request):
         'parties': parties_data,
         'count': len(parties_data)
     })
+
+@login_required
+@require_POST # Ensure only POST requests are allowed
+def delete_party_view(request, party_id):
+    """API endpoint to delete a specific party."""
+    party = get_object_or_404(Party, id=party_id, restaurant__user=request.user) # Ensure user owns the restaurant of the party
+    try:
+        party.delete()
+        return JsonResponse({'success': True, 'message': 'Party deleted successfully'})
+    except Exception as e:
+        logger.error(f"Error deleting party {party_id}: {str(e)}")
+        return JsonResponse({'success': False, 'message': 'Failed to delete party'}, status=500)
 
 #
 # ANALYTICS PAGE
