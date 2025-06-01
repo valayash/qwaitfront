@@ -1,51 +1,21 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import Restaurant, QueueEntry, Party, Reservation, CustomUser
+# from django.contrib.auth.admin import UserAdmin # No longer needed here
+# from .models import Restaurant, CustomUser # Models moved
+# from waitlist.models import WaitlistEntry # WaitlistEntry admin should be in waitlist app
 
-# Custom User Admin
-@admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'is_staff', 'date_joined')
-    search_fields = ('email',)
-    ordering = ('-date_joined',)
+# CustomUserAdmin and RestaurantAdmin moved to auth_settings.admin
 
-# Restaurant Admin
-@admin.register(Restaurant)
-class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('name', 'get_user_email', 'created_at')  # Changed
-    search_fields = ('name', 'user__email')  # Search by user email
-    
-    def get_user_email(self, obj):
-        return obj.user.email
-    get_user_email.short_description = 'Owner Email'  # Column header
+# WaitlistEntryAdmin should be in waitlist.admin.py. Removing from here if it was added.
+# @admin.register(WaitlistEntry)
+# class WaitlistEntryAdmin(admin.ModelAdmin):
+#     list_display = ('customer_name', 'restaurant', 'phone_number', 'status', 'timestamp', 'people_count', 'notes')
+#     list_filter = ('status', 'restaurant', 'timestamp')
+#     search_fields = ('customer_name', 'phone_number', 'restaurant__name', 'notes')
+#     list_editable = ('status', 'notes')
+#     date_hierarchy = 'timestamp'
 
-@admin.register(QueueEntry)
-class QueueEntryAdmin(admin.ModelAdmin):
-    list_display = ('restaurant', 'customer_name', 'phone_number', 'people_count', 'status', 'timestamp')
-
-@admin.register(Party)
-class PartyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone', 'restaurant', 'visits', 'last_visit', 'created_at', 'notes')
-    list_filter = ('restaurant', 'visits')
-    search_fields = ('name', 'phone')
-    ordering = ('-created_at',)
-
-
-@admin.register(Reservation)
-class ReservationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone', 'restaurant', 'date', 'time', 'party_size', 'created_at')
-    list_filter = ('restaurant', 'date', 'party_size')
-    search_fields = ('name', 'phone', 'notes')
-    date_hierarchy = 'date'
-    ordering = ('date', 'time')
-    
-    fieldsets = (
-        ('Customer Information', {
-            'fields': ('name', 'phone', 'restaurant')
-        }),
-        ('Reservation Details', {
-            'fields': ('date', 'time', 'party_size', 'notes')
-        })
-    )
+# This file might become empty if restaurant_app has no other models to register for admin.
+# If restaurant_app has other models, their admin registration would remain here.
+pass # If empty
 
 

@@ -1,218 +1,122 @@
 import apiClient from './apiConfig';
 
-// Function to get restaurant information (used by JoinQueue)
-const getRestaurant = async (restaurantId) => {
+// Function to get restaurant information for the join queue page
+const getJoinQueuePageData = async (restaurantId) => {
   try {
-    console.log('Getting restaurant info for ID:', restaurantId);
-    const response = await apiClient.get(`/join-queue/${restaurantId}/`);
-    console.log('Restaurant API response:', response.data);
-    return response.data;
+    console.log('Getting join queue page data for restaurant ID:', restaurantId);
+    const response = await apiClient.get(`/api/customer/join-queue/${restaurantId}/`);
+    console.log('Join queue page data response:', response.data);
+    return response.data; // Contains restaurant info, queue_size, is_qr_scan
   } catch (error) {
-    console.error('Error getting restaurant info:', error);
-    console.error('Error details:', error.response?.data || error.message);
+    console.error('Error getting join queue page data:', error.response?.data || error.message);
     throw error;
   }
 };
 
-// Function to check if phone is already in waitlist
+// Function to get basic restaurant info (e.g., after QR scan)
+const getScannedRestaurantInfo = async (restaurantId) => {
+  try {
+    console.log('Getting scanned restaurant info for ID:', restaurantId);
+    const response = await apiClient.get(`/api/customer/scan-qr/${restaurantId}/`);
+    console.log('Scanned restaurant info response:', response.data);
+    return response.data; // Contains restaurant id, name, join_queue_url_segment
+  } catch (error) {
+    console.error('Error getting scanned restaurant info:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Function to check if phone is already in waitlist for a restaurant
 const checkPhoneInWaitlist = async (restaurantId, phoneNumber) => {
   try {
-    // Extract only digits from phone number
-    const digitsOnly = phoneNumber.replace(/\D/g, '');
-    console.log('Checking if phone number exists in waitlist:', digitsOnly);
-    
-    const response = await apiClient.get(`/restaurant/${restaurantId}/check-phone/${digitsOnly}/`);
-    console.log('Phone check response:', response.data);
+    // Backend might handle cleaning, or send as is if backend expects various formats
+    console.log(`Checking phone ${phoneNumber} for restaurant ${restaurantId}`);
+    const response = await apiClient.get(`/api/customer/check-phone/${restaurantId}/${phoneNumber}/`);
+    console.log('Phone check response:', response.data); // Expects { exists: boolean, entry_id?, customer_name? }
     return response.data;
   } catch (error) {
-    console.error('Error checking phone in waitlist:', error);
-    console.error('Error details:', error.response?.data || error.message);
+    console.error('Error checking phone in waitlist:', error.response?.data || error.message);
     throw error;
   }
 };
 
-// Function to join a queue
-const joinQueue = async (restaurantId, data) => {
+// Function to submit to join a queue (expects JSON data)
+const joinQueueSubmit = async (restaurantId, customerData) => {
+  // customerData: { customer_name, phone_number, people_count, notes? }
   try {
     const response = await apiClient.post(
-      `/join-queue/${restaurantId}/join/`, 
-      data
+      `/api/customer/join-queue/${restaurantId}/submit/`, 
+      customerData // Send as JSON
     );
-    
-    return {
-      success: true,
-      queue_entry_id: response.data.queue_entry_id,
-      position: response.data.position,
-      estimated_wait_time: response.data.estimated_wait_time
-    };
+    console.log('Join queue submit response:', response.data);
+    // Expects { success, queue_entry_id, position, estimated_wait_time, confirmation_url_segment }
+    return response.data; 
   } catch (error) {
-    console.error('Error joining queue:', error);
-    throw error;
+    console.error('Error submitting to join queue:', error.response?.data || error.message);
+    // Return the full error response data if available, as it might contain validation errors
+    throw error.response?.data || error; 
   }
 };
 
 // Function to get queue confirmation details
-const getQueueConfirmation = async (restaurantId, queueEntryId) => {
+const getQueueConfirmationDetails = async (restaurantId, queueEntryId) => {
   try {
     console.log(`Fetching queue confirmation for restaurant ${restaurantId}, entry ${queueEntryId}`);
     const response = await apiClient.get(
-      `/join-queue/${restaurantId}/queue-confirmation/${queueEntryId}/`
+      `/api/customer/queue-confirmation/${restaurantId}/${queueEntryId}/`
     );
-    
     console.log('Queue confirmation response:', response.data);
-    
-    // Add restaurant info to queue_entry to maintain backward compatibility
-    if (response.data && response.data.restaurant && response.data.queue_entry) {
-      response.data.queue_entry.restaurant = response.data.restaurant;
-    }
-    
-    return response.data;
+    return response.data; // Contains restaurant, queue_entry, position, estimated_wait_time, queue_size
   } catch (error) {
-    console.error('Error getting queue confirmation:', error);
-    console.error('Error details:', error.response?.data || error.message);
+    console.error('Error getting queue confirmation details:', error.response?.data || error.message);
     throw error;
   }
 };
 
-// Function to remove from queue
-const removeFromQueue = async (restaurantId, queueEntryId) => {
+// Function for a customer to leave the queue
+const leaveQueue = async (restaurantId, entryId) => {
   try {
-    console.log(`Removing entry ${queueEntryId} from queue`);
-    
-    // Set the header to indicate this is an AJAX request
-    const config = {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    };
-    
+    console.log(`Customer leaving queue: entry ${entryId} for restaurant ${restaurantId}`);
     const response = await apiClient.post(
-      `/join-queue/${restaurantId}/queue/${queueEntryId}/leave/`,
-      {},  // empty data object for POST
-      config
+      `/api/customer/leave-queue/${restaurantId}/${entryId}/`,
+      {} // Empty payload for this POST request
     );
-    
-    console.log('Remove from queue response:', response.data);
-    return {
-      success: true,
-      message: response.data.message
-    };
+    console.log('Leave queue response:', response.data);
+    return response.data; // Expects { success, message, redirect_url_segment }
   } catch (error) {
-    console.error('Error removing from queue:', error);
-    console.error('Error details:', error.response?.data || error.message);
-    throw error;
+    console.error('Error leaving queue:', error.response?.data || error.message);
+    throw error.response?.data || error;
   }
 };
 
-// Function to check queue status
-const checkQueueStatus = async (restaurantId, queueEntryId) => {
+// Function to check current queue status for a customer
+const checkCustomerQueueStatus = async (restaurantId, entryId) => {
   try {
     const response = await apiClient.get(
-      `/join-queue/${restaurantId}/queue/${queueEntryId}/status/`
+      `/api/customer/queue-status/${restaurantId}/${entryId}/`
     );
-    
-    return {
-      success: true,
-      queuePosition: response.data.queue_position,
-      estimatedWaitTime: response.data.estimated_wait_time,
-      status: response.data.status,
-      message: response.data.message,
-      restaurant: response.data.restaurant
-    };
+    console.log('Check customer queue status response:', response.data);
+    // Expects { success, restaurant, entry, position, wait_time, queue_size, minutes_in_queue, active }
+    return response.data;
   } catch (error) {
-    console.error('Error checking queue status:', error);
-    
-    // Extract error message from response if available
-    const errorMessage = error.response?.data?.message || 
-                        'Failed to check queue status. Please try again.';
-    
-    return {
-      success: false,
-      message: errorMessage
-    };
+    console.error('Error checking customer queue status:', error.response?.data || error.message);
+    throw error.response?.data || error;
   }
 };
 
-// Function to join the queue (submit form)
-const joinQueueSubmit = async (restaurantId, formData) => {
-  try {
-    const response = await apiClient.post(
-      `/join-queue/${restaurantId}/submit/`,
-      formData
-    );
-    
-    return {
-      success: true,
-      queue_entry_id: response.data.queue_entry_id,
-      position: response.data.position,
-      estimated_wait_time: response.data.estimated_wait_time
-    };
-  } catch (error) {
-    console.error('Error submitting join queue form:', error);
-    
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Failed to join the queue. Please try again.'
-    };
-  }
-};
-
-// Function to cancel a place in the queue (keeping this for backward compatibility)
-const cancelQueueEntry = async (restaurantId, queueEntryId) => {
-  try {
-    const formData = new FormData();
-    formData.append('queue_entry_id', queueEntryId);
-    
-    const response = await apiClient.post(
-      `/restaurant/${restaurantId}/cancel-queue-entry/`,
-      formData
-    );
-    
-    return {
-      success: true,
-      message: response.data.message
-    };
-  } catch (error) {
-    console.error('Error cancelling queue entry:', error);
-    
-    // Extract error message from response if available
-    const errorMessage = error.response?.data?.message || 
-                        'Failed to cancel your place in the queue. Please try again.';
-    
-    return {
-      success: false,
-      message: errorMessage
-    };
-  }
-};
-
-// Function to get restaurant information (keeping this for backward compatibility)
-const getRestaurantInfo = async (restaurantId) => {
-  try {
-    const response = await apiClient.get(`/restaurant/${restaurantId}/info/`);
-    
-    return {
-      success: true,
-      restaurant: response.data
-    };
-  } catch (error) {
-    console.error('Error getting restaurant info:', error);
-    
-    return {
-      success: false,
-      message: 'Failed to load restaurant information'
-    };
-  }
-};
+// getRestaurant -> renamed to getJoinQueuePageData or use getScannedRestaurantInfo
+// joinQueue -> consolidated into joinQueueSubmit
+// removeFromQueue -> renamed to leaveQueue
+// checkQueueStatus -> renamed to checkCustomerQueueStatus
+// cancelQueueEntry -> effectively same as leaveQueue, can be removed or aliased if needed
+// getRestaurantInfo -> use getJoinQueuePageData or getScannedRestaurantInfo
 
 export {
-  getRestaurant,
+  getJoinQueuePageData,
+  getScannedRestaurantInfo,
   checkPhoneInWaitlist,
-  joinQueue,
-  getQueueConfirmation,
-  removeFromQueue,
-  checkQueueStatus,
-  cancelQueueEntry,
-  getRestaurantInfo,
-  joinQueueSubmit
+  joinQueueSubmit,
+  getQueueConfirmationDetails,
+  leaveQueue,
+  checkCustomerQueueStatus,
 }; 

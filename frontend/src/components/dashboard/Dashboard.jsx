@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../shared/Sidebar';
+import { logout } from '../../services/authService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,9 +30,20 @@ const Dashboard = () => {
     ]);
   }, []);
 
-  const handleLogout = () => {
-    // In a real app, this would call an API to log out
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      if (result.success) {
+        console.log('Logout successful, redirecting to login');
+        navigate('/login');
+      } else {
+        console.error('Logout failed:', result.message);
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      navigate('/login');
+    }
   };
 
   return (

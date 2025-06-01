@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as dateFns from 'date-fns';
+/*
 import {
   fetchParties,
   addPartyToWaitlist,
   editParty,
   deleteParty
 } from '../../services/partyService';
+*/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
@@ -108,9 +110,12 @@ const Parties = () => {
   const loadParties = async (currentSearchTerm = searchTerm) => {
     setIsLoading(true);
     try {
-      const data = await fetchParties(currentSearchTerm);
-      setRestaurantName(data.restaurant.name);
-      setParties(data.parties);
+      // const data = await fetchParties(currentSearchTerm);
+      // setRestaurantName(data.restaurant.name);
+      // setParties(data.parties);
+      setRestaurantName('Restaurant'); // Placeholder
+      setParties([]); // Placeholder
+      showToast('Party data fetching is currently disabled.', 'warning');
     } catch (error) {
       console.error('Failed to load parties:', error);
       showToast('Failed to load parties', 'error');
@@ -228,7 +233,8 @@ const Parties = () => {
     setIsLoading(true);
     
     try {
-      const response = await editParty(currentPartyId, editFormValues);
+      // const response = await editParty(currentPartyId, editFormValues);
+      const response = { success: false, message: 'Edit party is currently disabled.' }; // Placeholder
       
       if (response.success) {
         showToast('Party updated successfully', 'success');
@@ -254,7 +260,8 @@ const Parties = () => {
     setIsLoading(true);
     
     try {
-      const response = await addPartyToWaitlist(currentPartyId, waitlistFormValues);
+      // const response = await addPartyToWaitlist(currentPartyId, waitlistFormValues);
+      const response = { success: false, message: 'Add to waitlist is currently disabled.' }; // Placeholder
       
       if (response.success) {
         showToast('Party added to waitlist successfully', 'success');
@@ -280,7 +287,8 @@ const Parties = () => {
     setIsLoading(true);
     
     try {
-      const response = await deleteParty(partyId);
+      // const response = await deleteParty(partyId);
+      const response = { success: false, message: 'Delete party is currently disabled.' }; // Placeholder
       
       if (response.success) {
         showToast('Party deleted successfully', 'success');

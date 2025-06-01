@@ -1,333 +1,170 @@
 import apiClient from './apiConfig';
 
-// Function to fetch waitlist data from API
-const fetchWaitlist = async () => {
+// Function to fetch comprehensive waitlist data (entries, QR, config)
+const getWaitlistData = async () => {
   try {
-    console.log('Fetching waitlist data...');
-    const response = await apiClient.get('/waitlist/');
-    console.log('Waitlist API response:', response.data);
-    return response.data;
+    console.log('Fetching comprehensive waitlist data...');
+    // Uses the custom action on the ViewSet that provides formatted entries, QR, etc.
+    const response = await apiClient.get('/api/waitlist/entries/data_with_qr/');
+    console.log('Waitlist data_with_qr response:', response.data);
+    return response.data; // Includes restaurant, queue_entries, queue_count, qr_code, join_url
   } catch (error) {
-    console.error('Error fetching waitlist:', error);
+    console.error('Error fetching comprehensive waitlist data:', error);
     throw error;
   }
 };
 
-// Function to fetch QR code for joining the queue
-const fetchQRCode = async () => {
+// Function to fetch only QR code if needed separately
+const fetchQRCodeOnly = async () => {
   try {
-    console.log('Fetching QR code data...');
-    const response = await apiClient.get('/qrcode/');
+    console.log('Fetching QR code data only...');
+    const response = await apiClient.get('/api/waitlist/qrcode/');
     console.log('QR code API response:', response.data);
-    
-    // Validate the response contains expected data
-    if (!response.data.qr_code || !response.data.join_url) {
-      console.error('QR code response missing expected fields:', response.data);
-      return {
-        qr_code: '',
-        join_url: ''
-      };
-    }
-    
-    return {
-      qr_code: response.data.qr_code,
-      join_url: response.data.join_url
-    };
+    return response.data; // Should return { qr_code: 'data:image/png;base64,...', join_url: '...' }
   } catch (error) {
-    console.error('Error fetching QR code:', error);
-    // Return empty values to prevent UI errors
-    return {
-      qr_code: '',
-      join_url: ''
-    };
+    console.error('Error fetching QR code only:', error);
+    return { qr_code: '', join_url: '' };
   }
 };
 
-// Function to update entry status (waiting, notified, served, cancelled)
-const updateEntryStatus = async (entryId, status) => {
+// Function to update entry status
+const updateEntryStatus = async (entryId, newStatus) => {
   try {
-    const response = await apiClient.post(`/waitlist/entry/${entryId}/status/`, 
-      { status: status },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+    const response = await apiClient.post(`/api/waitlist/entries/${entryId}/set_status/`, 
+      { status: newStatus } // Backend expects { "status": "NEW_STATUS" }
     );
-    return { success: true, data: response.data };
+    console.log('Update entry status response:', response.data);
+    return { success: true, data: response.data }; // DRF returns the updated entry
   } catch (error) {
-    console.error('Error updating entry status:', error);
+    console.error('Error updating entry status:', error.response?.data || error.message);
     return { 
       success: false, 
-      message: error.response?.data?.message || 'Failed to update status' 
+      message: error.response?.data?.detail || error.response?.data?.error || 'Failed to update status' 
     };
   }
 };
 
 // Function to remove entry from waitlist
-const removeEntry = async (entryId) => {
+const removeWaitlistEntry = async (entryId) => {
   try {
-    const response = await apiClient.post(`/waitlist/entry/${entryId}/remove/`);
-    return { success: true, data: response.data };
+    await apiClient.delete(`/api/waitlist/entries/${entryId}/`);
+    console.log(`Entry ${entryId} removed successfully.`);
+    return { success: true }; // DELETE usually returns 204 No Content
   } catch (error) {
-    console.error('Error removing entry:', error);
+    console.error('Error removing entry:', error.response?.data || error.message);
     return { 
       success: false, 
-      message: error.response?.data?.message || 'Failed to remove entry' 
+      message: error.response?.data?.detail || error.response?.data?.error || 'Failed to remove entry' 
     };
   }
 };
 
-// Function to refresh the queue
-const refreshQueue = async () => {
+// Function to add an entry to the waitlist (replaces addParty and addToWaitlist)
+const addWaitlistEntry = async (entryData) => {
+  console.log('Adding waitlist entry with data:', entryData);
   try {
-    const response = await apiClient.post('/waitlist/refresh/');
-    return { 
-      success: true, 
-      entries: response.data.entries,
-      count: response.data.count
-    };
-  } catch (error) {
-    console.error('Error refreshing queue:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to refresh queue' 
-    };
-  }
-};
-
-// Function to add a party to the waitlist
-const addParty = async (partyData) => {
-  console.log('Adding party with data:', partyData);
-  try {
-    // Use the same endpoint as waitlist data, but as a POST request
-    const response = await apiClient.post('/waitlist/add-party/', partyData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    // Log the response for debugging
-    console.log('Add party API response:', response.data);
-    
-    if (!response.data.success) {
-      console.error('Add party API returned success=false:', response.data);
-      return {
-        success: false,
-        message: response.data.message || 'Failed to add party',
-        data: response.data
-      };
-    }
-    
-    console.log('Successfully added party, forcing a waitlist refresh');
-    
-    try {
-      // Force a manual refresh in case socket update doesn't work
-      await fetchWaitlist();
-    } catch (refreshError) {
-      console.warn('Non-critical error refreshing waitlist after adding party:', refreshError);
-    }
-    
+    // Backend expects JSON, ensure entryData matches WaitlistEntrySerializer fields
+    const response = await apiClient.post('/api/waitlist/entries/', entryData);
+    console.log('Add waitlist entry API response:', response.data);
     return {
       success: true,
-      message: response.data.message || 'Party added successfully',
-      data: response.data
+      data: response.data // DRF returns the created entry
     };
   } catch (error) {
-    console.error('Error adding party:', error);
-    console.error('Error details:', error.response?.data || error.message);
+    console.error('Error adding waitlist entry:', error.response?.data || error.message);
     return { 
       success: false, 
-      message: error.response?.data?.message || 'Failed to add party' 
+      message: error.response?.data?.detail || JSON.stringify(error.response?.data) || 'Failed to add entry' 
     };
   }
 };
 
 // Function to edit an entry in the waitlist
-const editEntry = async (entryId, updatedData) => {
-  try {
-    const response = await apiClient.put(`/waitlist/entry/${entryId}/edit/`, updatedData);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error editing entry:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to update entry' 
-    };
-  }
-};
-
-// Function to update column settings
-const updateColumnSettings = async (columns) => {
-  try {
-    const response = await apiClient.post('/waitlist/update-columns/', { columns });
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error updating column settings:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to update column settings' 
-    };
-  }
-};
-
-// Function to get waitlist entries
-const getWaitlist = async () => {
-  try {
-    console.log('Getting waitlist entries...');
-    const response = await apiClient.get('/waitlist/');
-    console.log('Waitlist entries response:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching waitlist:', error);
-    throw error;
-  }
-};
-
-// Function to add a customer to waitlist
-const addToWaitlist = async (customerData) => {
-  try {
-    const formData = new FormData();
-    formData.append('name', customerData.name);
-    formData.append('phone', customerData.phone);
-    formData.append('party_size', customerData.party_size);
-    formData.append('quoted_time', customerData.quoted_time);
-    
-    if (customerData.email) {
-      formData.append('email', customerData.email);
-    }
-    
-    if (customerData.notes) {
-      formData.append('notes', customerData.notes);
-    }
-    
-    const response = await apiClient.post('/waitlist/add-party/', formData);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error adding to waitlist:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to add to waitlist' 
-    };
-  }
-};
-
-// Function to edit a waitlist entry
 const editWaitlistEntry = async (entryId, updatedData) => {
   try {
-    const formData = new FormData();
-    
-    Object.keys(updatedData).forEach(key => {
-      formData.append(key, updatedData[key]);
-    });
-    
-    const response = await apiClient.post(`/waitlist/entry/${entryId}/edit/`, formData);
-    return { success: true, data: response.data };
+    // Backend expects JSON
+    const response = await apiClient.put(`/api/waitlist/entries/${entryId}/`, updatedData);
+    console.log('Edit waitlist entry response:', response.data);
+    return { success: true, data: response.data }; // DRF returns the updated entry
   } catch (error) {
-    console.error('Error editing waitlist entry:', error);
+    console.error('Error editing entry:', error.response?.data || error.message);
     return { 
       success: false, 
-      message: error.response?.data?.message || 'Failed to edit waitlist entry' 
+      message: error.response?.data?.detail || JSON.stringify(error.response?.data) || 'Failed to update entry' 
     };
   }
 };
 
-// Function to send SMS notification
-const sendSmsNotification = async (entryId) => {
+// Function to update column settings for the waitlist display
+const updateWaitlistColumnSettings = async (columns) => {
   try {
-    const response = await apiClient.post(`/waitlist/notify/${entryId}/`);
+    const response = await apiClient.post('/api/waitlist/config/', { columns });
+    console.log('Update column settings response:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('Error sending SMS notification:', error);
+    console.error('Error updating column settings:', error.response?.data || error.message);
     return { 
       success: false, 
-      message: error.response?.data?.message || 'Failed to send SMS notification' 
+      message: error.response?.data?.detail || error.response?.data?.error || 'Failed to update column settings' 
     };
   }
 };
 
-// Function to seat a party
-const seatParty = async (entryId, tableNumber) => {
+// Function to get a single waitlist entry by ID
+const getWaitlistEntryById = async (entryId) => {
   try {
-    const formData = new FormData();
-    formData.append('table_number', tableNumber);
-    
-    const response = await apiClient.post(`/waitlist/entry/${entryId}/serve/`, formData);
+    const response = await apiClient.get(`/api/waitlist/entries/${entryId}/`);
+    console.log('Get waitlist entry by ID response:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('Error seating party:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to seat party' 
+    console.error('Error fetching single waitlist entry:', error.response?.data || error.message);
+    return {
+      success: false,
+      message: error.response?.data?.detail || 'Failed to fetch entry'
     };
   }
 };
 
-// Function to get waitlist entry by ID
-const getWaitlistEntry = async (entryId) => {
+// Function to send a notification (SMS/Email) via the notifications app
+const sendAppNotification = async (notificationData) => {
+  // Expected notificationData: { entry_id, notification_type ('sms', 'email', 'both'), message?, subject?, email_context? }
   try {
-    const response = await apiClient.get(`/waitlist/entry/${entryId}/`);
+    const response = await apiClient.post('/api/notifications/send/', notificationData);
+    console.log('Send notification response:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('Error getting waitlist entry:', error);
-    throw error;
-  }
-};
-
-// Function to mark as no show
-const markNoShow = async (entryId) => {
-  try {
-    const response = await apiClient.post(`/waitlist/entry/${entryId}/status/`, {
-      status: 'NO_SHOW'
-    });
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error marking as no show:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to mark as no show' 
+    console.error('Error sending notification:', error.response?.data || error.message);
+    return {
+      success: false,
+      message: error.response?.data?.detail || error.response?.data?.error || 'Failed to send notification'
     };
   }
 };
 
-// Function to get tables configuration
-const getTablesConfig = async () => {
-  try {
-    const response = await apiClient.get('/settings/tables/');
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error getting tables config:', error);
-    throw error;
-  }
-};
+// Old functions that need to be updated or removed:
+// fetchWaitlist -> replaced by getWaitlistData
+// fetchQRCode -> replaced by fetchQRCodeOnly or getWaitlistData
+// refreshQueue -> effectively getWaitlistData or just refetch
+// addToWaitlist -> replaced by addWaitlistEntry
+// editEntry -> replaced by editWaitlistEntry
+// sendSmsNotification -> replaced by sendAppNotification
+// seatParty -> use updateEntryStatus with status 'SERVED'
+// markNoShow -> use updateEntryStatus with status 'REMOVED' or custom status
 
-// Function to get estimated wait time
-const getEstimatedWaitTime = async (partySize) => {
-  try {
-    const response = await apiClient.get(`/waitlist/estimate-wait/?party_size=${partySize}`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error getting estimated wait time:', error);
-    throw error;
-  }
-};
+// Placeholder for other functions that might exist in the original file
+// like getTablesConfig, getEstimatedWaitTime etc.
+// These would need to be mapped to new backend endpoints if they exist,
+// or their logic re-evaluated based on available data from getWaitlistData.
 
 export {
-  fetchWaitlist,
-  fetchQRCode,
-  updateEntryStatus,
-  removeEntry,
-  refreshQueue,
-  addParty,
-  editEntry,
-  updateColumnSettings,
-  getWaitlist,
-  addToWaitlist,
+  getWaitlistData, // Main function to get all relevant data for waitlist page
+  fetchQRCodeOnly, // If QR is needed in isolation
+  addWaitlistEntry,
   editWaitlistEntry,
-  sendSmsNotification,
-  seatParty,
-  getWaitlistEntry,
-  markNoShow,
-  getTablesConfig,
-  getEstimatedWaitTime
+  updateEntryStatus,
+  removeWaitlistEntry,
+  updateWaitlistColumnSettings,
+  getWaitlistEntryById,
+  sendAppNotification, // Replaces sendSmsNotification and can do more
+  // ... any other relevant exports that are kept or refactored ...
 }; 

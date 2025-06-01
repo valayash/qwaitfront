@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  fetchWaitlist,
-  fetchQRCode,
+  getWaitlistData,
+  fetchQRCodeOnly,
   updateEntryStatus,
-  removeEntry,
-  addParty,
-  editEntry,
-  updateColumnSettings
+  removeWaitlistEntry,
+  addWaitlistEntry,
+  editWaitlistEntry,
+  updateWaitlistColumnSettings
 } from '../../services/waitlistService';
 import { logout } from '../../services/authService';
 // NEW: Import WebSocket service
@@ -146,39 +146,46 @@ const Waitlist = () => {
     }
     try {
       setError(null);
-      const data = await fetchWaitlist();
-      console.log('Waitlist API response:', data);
+      const data = await getWaitlistData();
+      console.log('Waitlist data_with_qr API response:', data);
       if (!data) throw new Error('No data received from API');
 
       if (data.restaurant?.name) setRestaurantName(data.restaurant.name);
       if (data.restaurant?.waitlist_columns) setVisibleColumns(data.restaurant.waitlist_columns);
-      if (data.restaurant?.id) setRestaurantId(data.restaurant.id); // IMPORTANT: Sets restaurantId
+      else if (data.config?.columns) setVisibleColumns(data.config.columns);
+
+      if (data.restaurant?.id) {
+        setRestaurantId(data.restaurant.id); // IMPORTANT: Sets restaurantId
+      }
 
       if (data.queue_entries && Array.isArray(data.queue_entries)) {
         const transformedEntries = data.queue_entries.map(entry =>
-          transformApiEntryToComponentFormat(entry) // Simplified call
+          transformApiEntryToComponentFormat(entry)
         );
-        setWaitlistEntries(assignPositions(transformedEntries)); // Use assignPositions
+        setWaitlistEntries(assignPositions(transformedEntries));
       } else {
         console.warn('No queue entries in API response or unexpected format:', data);
         setWaitlistEntries([]);
       }
+
+      if (data.qr_code) setQrCodeURL(data.qr_code);
+      if (data.join_url) setJoinURL(data.join_url);
 
       if (!initialLoadComplete) setInitialLoadComplete(true);
     } catch (err) {
       console.error('Error loading waitlist data:', err);
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
         setError('Authentication error - please log in again.');
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('user');
-        setTimeout(() => navigate('/login'), 1000);
+        showToast('Authentication error. Redirecting to login...', 'error');
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError('Failed to load waitlist data. Please try again.');
+        showToast(err.message || 'Failed to load waitlist data.', 'error');
       }
     } finally {
       if (!initialLoadComplete) setLoading(false);
     }
-  }, [initialLoadComplete, navigate]); // Dependencies for useCallback
+  }, [initialLoadComplete, navigate, showToast]);
 
   // Initial data load
   useEffect(() => {
@@ -187,7 +194,7 @@ const Waitlist = () => {
       setError('Failed to load waitlist data. Please check your connection or try again later.');
       if (!initialLoadComplete) setLoading(false);
     });
-  }, [loadWaitlistData]); // Runs when loadWaitlistData reference changes (which is memoized)
+  }, [loadWaitlistData, initialLoadComplete]); // Runs when loadWaitlistData reference changes (which is memoized)
 
   // Effect to derive queueCount from waitlistEntries
   useEffect(() => {
@@ -200,69 +207,64 @@ const Waitlist = () => {
   // --- WebSocket Integration ---
   const handleWebSocketMessage = useCallback((message) => {
     console.log('WebSocket message received:', message);
-    if (!message.type || !message.payload) {
-        console.warn("Received malformed WebSocket message:", message);
+    // The actual message from Django Channels might be message.data or message.payload
+    // depending on how realtimeService is structured. Assuming realtimeService standardizes it to message.type and message.data
+    const type = message.type; // e.g., 'send.waitlist.update', 'send.waitlist.remove'
+    const data = message.data; // The payload from the backend
+
+    if (!type || !data) {
+        console.warn("Received malformed WebSocket message (missing type or data):", message);
         return;
     }
 
-    const payloadEntry = typeof message.payload === 'object' ? message.payload : { id: message.payload };
-
-    switch (message.type) {
-      case 'NEW_WAITLIST_ENTRY':
+    switch (type) {
+      case 'send.waitlist.update': // Covers both new entries and updates
         {
+          const receivedEntry = transformApiEntryToComponentFormat(data); // data is the entry object
           setWaitlistEntries(prevEntries => {
-            const newEntry = transformApiEntryToComponentFormat(payloadEntry);
-            if (prevEntries.some(e => e.id === newEntry.id)) return prevEntries;
-            return assignPositions([...prevEntries, newEntry]);
-          });
-          showToast(`New party "${payloadEntry.customer_name || 'Unknown'}" joined the waitlist!`, 'info');
-          break;
-        }
-      case 'ENTRY_UPDATED':
-        {
-          setWaitlistEntries(prevEntries => {
-            const receivedEntry = transformApiEntryToComponentFormat(payloadEntry);
-            let entryExists = false;
-            const updatedList = prevEntries.map(entry => {
-              if (entry.id === receivedEntry.id) {
-                entryExists = true;
-                return { ...entry, ...receivedEntry };
-              }
-              return entry;
-            });
+            const entryExists = prevEntries.some(e => e.id === receivedEntry.id);
+            let updatedList;
             if (entryExists) {
-              return assignPositions(updatedList);
+              updatedList = prevEntries.map(entry =>
+                entry.id === receivedEntry.id ? { ...entry, ...receivedEntry } : entry
+              );
             } else {
-              // If entry wasn't found, add it to the list
-              return assignPositions([...prevEntries, receivedEntry]);
+              updatedList = [...prevEntries, receivedEntry];
             }
+            return assignPositions(updatedList);
           });
-          showToast(`Waitlist updated for "${payloadEntry.customer_name || 'Unknown'}".`, 'info');
+          showToast(`Waitlist updated for "${data.customer_name || 'New Entry'}".`, 'info');
           break;
         }
-      case 'ENTRY_REMOVED':
+      case 'send.waitlist.remove':
         {
-          const removedEntryId = payloadEntry.id;
+          const removedEntryId = data.removed_id; // Backend sends { removed_id: id }
+          if (!removedEntryId) {
+            console.warn('Received waitlist.remove message without removed_id:', data);
+            return;
+          }
           let partyName = 'A party';
           setWaitlistEntries(prevEntries => {
             const entryToRemove = prevEntries.find(e => e.id === removedEntryId);
-            if (entryToRemove) partyName = entryToRemove.customerName;
+            if (entryToRemove) partyName = entryToRemove.customerName || 'Entry';
             const filteredEntries = prevEntries.filter(entry => entry.id !== removedEntryId);
             return assignPositions(filteredEntries);
           });
-          showToast(`Party "${partyName}" removed from waitlist.`, 'info');
+          showToast(`${partyName} was removed from the waitlist.`, 'info');
           break;
         }
-      case 'WAITLIST_COLUMNS_UPDATED':
-          if (message.payload.columns) {
-            setVisibleColumns(message.payload.columns);
-            showToast('Display columns updated.', 'info');
-          }
-          break;
+      // case 'WAITLIST_COLUMNS_UPDATED': // If you had a WebSocket message for this
+      //   {
+      //     if (data.columns && Array.isArray(data.columns)) {
+      //       setVisibleColumns(data.columns);
+      //       showToast('Display columns updated!', 'info');
+      //     }
+      //     break;
+      //   }
       default:
-        console.warn('Unhandled WebSocket message type:', message.type);
+        console.warn('Received unhandled WebSocket message type:', type, data);
     }
-  }, [showToast, setVisibleColumns]);
+  }, [showToast, setWaitlistEntries]); // Dependencies: assignPositions is stable, transformApiEntryToComponentFormat is stable
 
   useEffect(() => {
     if (restaurantId) {
@@ -312,37 +314,6 @@ const Waitlist = () => {
   }, []); // Empty dependency array: run once on mount, cleanup on unmount. 
           // If entries were not updating, it might be because `waitlistEntries` was in dependency array causing loop.
   // --- End Wait Time Updater ---
-
-  const loadQRCode = async () => {
-    try {
-      console.log('Loading QR code data...');
-      setIsLoading(true); // Show loading indicator while fetching
-      
-      const { qr_code, join_url } = await fetchQRCode();
-      console.log('QR code loaded:', qr_code ? 'QR code available' : 'QR code missing');
-      console.log('Join URL:', join_url);
-      
-      // Only update state if we actually have data
-      if (qr_code) {
-        setQrCodeURL(qr_code);
-      } else {
-        console.error('QR code data is empty or invalid');
-        showToast('Failed to load QR code. Please try again later.', 'error');
-      }
-      
-      if (join_url) {
-        setJoinURL(join_url);
-      } else {
-        console.error('Join URL is empty or invalid');
-      }
-    } catch (err) {
-      console.error('Error loading QR code:', err);
-      showToast('Failed to load QR code. Please try again later.', 'error');
-    } finally {
-      setIsLoading(false); // Hide loading indicator
-    }
-  };
-  useEffect(() => { if (showQRModal) loadQRCode(); }, [showQRModal]);
 
   const filteredEntries = waitlistEntries.filter(entry => {
     const searchTermLower = searchTerm.toLowerCase();
@@ -416,20 +387,23 @@ const Waitlist = () => {
   const handleColumnSettingsSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
-      // The backend should broadcast 'WAITLIST_COLUMNS_UPDATED' via WebSocket upon success
-      const result = await updateColumnSettings(columnSelections);
+      // Pass as an object { columns: ... }
+      const result = await updateWaitlistColumnSettings({ columns: columnSelections });
       if (result.success) {
         // Optimistic update or rely on WebSocket:
-        // setVisibleColumns(columnSelections); // Optimistic
-        showToast('Column settings submitted. Update will reflect shortly.', 'success');
+        setVisibleColumns(columnSelections); // Optimistically update UI
+        showToast('Column settings updated successfully!', 'success');
+        closeColumnModal();
       } else {
-        showToast(result.message || 'Failed to update column settings', 'error');
+        setError(result.message || 'Failed to update column settings.');
+        showToast(result.message || 'Failed to update column settings.', 'error');
       }
-      closeColumnModal();
     } catch (err) {
       console.error('Error updating column settings:', err);
-      showToast('An error occurred while updating column settings', 'error');
+      setError('An unexpected error occurred while updating column settings.');
+      showToast('An unexpected error occurred.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -472,7 +446,7 @@ const Waitlist = () => {
       setWaitlistEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
 
       try {
-        const result = await removeEntry(id);
+        const result = await removeWaitlistEntry(id);
         if (result.success) {
           showToast(`${entryToRemove.customerName} has been successfully removed.`, 'success');
         } else {
@@ -528,7 +502,7 @@ const Waitlist = () => {
     setIsLoading(true);
     try {
       // Backend will broadcast 'NEW_WAITLIST_ENTRY'
-      const response = await addParty({ /* ... formData ... */ });
+      const response = await addWaitlistEntry({ /* ... formData ... */ });
       if (response.success) {
         showToast('Party added successfully! It will appear shortly.', 'success');
         setShowAddModal(false);
@@ -571,9 +545,13 @@ const Waitlist = () => {
     // ... (validation) ...
     setIsLoading(true);
     try {
-      const updatedData = { /* ... editFormData ... */ };
+      const updatedData = {
+        ...editFormData,
+        people_count: parseInt(editFormData.people_count, 10) || 1,
+        quoted_time: parseInt(editFormData.quoted_time, 10) || 0,
+      };
       // Backend will broadcast 'ENTRY_UPDATED'
-      const result = await editEntry(selectedEntry.id, updatedData);
+      const result = await editWaitlistEntry(selectedEntry.id, updatedData);
       if (result.success) {
         showToast('Party update submitted. It will reflect shortly.', 'success');
         closeEditModal();

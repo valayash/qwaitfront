@@ -51,8 +51,9 @@ const Register = () => {
       const result = await register({
         email: formData.email,
         password: formData.password,
-        confirm_password: formData.confirmPassword,
-        restaurant_name: formData.restaurantName
+        restaurant_name: formData.restaurantName,
+        first_name: formData.firstName,
+        last_name: formData.lastName
       });
       
       if (result.success) {
@@ -239,7 +240,7 @@ const Register = () => {
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 I agree to the
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 ml-1">
+                <a href="/terms" className="font-medium text-blue-600 hover:text-blue-500 ml-1">
                   Terms and Conditions
                 </a>
               </label>

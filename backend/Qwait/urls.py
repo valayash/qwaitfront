@@ -14,25 +14,34 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.views.generic import TemplateView
+# from django.views.generic import TemplateView # Not currently used
 from django.contrib import admin
-from django.urls import path, include
-from . import views
+from django.urls import path, include # include is important
+from . import views # For the home view
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
+    # path('admin/', admin.site.urls), # Temporarily commented out
+    path('api/', views.home, name='home'), # Changed to /api/ as a base for API calls
     
-    # Authentication URLs
-    path('register/', views.register_view, name='register'),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
+    # Authentication URLs are now in auth_settings.urls
+    path('api/auth/', include('auth_settings.urls')), # Include auth URLs under /api/auth/
+    path('api/customer/', include('customer_interface.urls')), # New line
+    # path('register/', views.register_view, name='register'), # Old - Removed
+    # path('login/', views.login_view, name='login'),       # Old - Removed
+    # path('logout/', views.logout_view, name='logout'),     # Old - Removed
     
     # App-specific URLs
-    path('', include('restaurant_app.urls')),
-    # path('join-queue/<int:restaurant_id>/', join_queue, name='join_queue'),
+    # path('', include('restaurant_app.urls')), # Keep if restaurant_app still has root URLs, or namespace it e.g. 'api/restaurant/'
+    path('api/restaurant/', include('restaurant_app.urls')), # Example namespacing for restaurant_app
+    path('api/waitlist/', include('waitlist.urls')),
+    path('api/', include('reservation.urls')), # Include reservation URLs
+    path('api/notifications/', include('notifications.urls')), # Added notifications URLs
+    # Add other app URLs here as they are refactored, e.g.:
+    # path('api/parties/', include('parties.urls')),
+    # path('api/analytics/', include('analytics.urls')),
+    # path('api/recent/', include('recent.urls')),
 ]
 
 if settings.DEBUG:

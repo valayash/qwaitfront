@@ -11,7 +11,8 @@ import os
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack # If you need authentication for websockets
-import restaurant_app.routing # Import your app's routing
+# import restaurant_app.routing # Old import, will be replaced
+import waitlist.routing # Import the new waitlist app's routing
 
 settings_module = 'Qwait.deployment_settings' if 'RENDER_EXTERNAL_HOSTNAME' in os.environ else 'Qwait.settings'
 
@@ -24,7 +25,8 @@ application = ProtocolTypeRouter({
     "http": django_asgi_app, # Handles standard HTTP requests
     "websocket": AuthMiddlewareStack( # Or just URLRouter if no auth needed on WS
         URLRouter(
-            restaurant_app.routing.websocket_urlpatterns
+            # restaurant_app.routing.websocket_urlpatterns # Old routes
+            waitlist.routing.websocket_urlpatterns # New waitlist routes
         )
     ),
 })

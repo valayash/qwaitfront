@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as dateFns from 'date-fns';
+/*
 import {
   fetchRecentActivity,
   undoAction,
 } from '../../services/recentActivityService';
+*/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
@@ -74,9 +76,12 @@ const Recent = () => {
   const loadRecentActivity = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchRecentActivity();
-      setRestaurantName(data.restaurant.name);
-      setRecentEntries(data.recent_entries);
+      // const data = await fetchRecentActivity();
+      // setRestaurantName(data.restaurant.name);
+      // setRecentEntries(data.recent_entries);
+      setRestaurantName('Restaurant'); // Placeholder
+      setRecentEntries([]); // Placeholder
+      showToast('Recent activity fetching is currently disabled.', 'warning');
     } catch (error) {
       console.error('Failed to load recent activity:', error);
       showToast('Failed to load recent activity', 'error');
@@ -94,7 +99,8 @@ const Recent = () => {
     setIsLoading(true);
     
     try {
-      const response = await undoAction(entryId);
+      // const response = await undoAction(entryId);
+      const response = { success: false, message: 'Undo action is currently disabled.' }; // Placeholder
       
       if (response.success) {
         showToast('Action undone successfully', 'success');

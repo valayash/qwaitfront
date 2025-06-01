@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Define the base URL for API requests
 export const API_BASE_URL = 'http://localhost:8000';
-
+// export const isDev = process.env.NODE_ENV === 'development'
+// export const API_BASE_URL = isDev ? process.env.REACT_APP_API_BASE_DEPLOY : process.env.REACT_APP_API_BASE_LOCAL;
 // Function to get CSRF token from cookies
 export const getCsrfToken = () => {
   const name = 'csrftoken';
@@ -70,6 +71,18 @@ apiClient.interceptors.request.use(
   async (config) => {
     console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
     
+    // Retrieve the auth token from localStorage (or wherever you store it after login)
+    const authToken = localStorage.getItem('authToken'); // Assuming you store it as 'authToken'
+
+    if (authToken) {
+      config.headers['Authorization'] = `Token ${authToken}`;
+      console.log('Added Auth Token to request headers');
+    } else {
+      // Optionally, handle cases where a protected route is accessed without a token
+      // This might already be handled by your existing isAuthenticated check and redirect logic
+      console.log('No Auth Token found in localStorage.');
+    }
+    
     // Always check authentication status first
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     console.log('Authentication status:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
@@ -96,7 +109,7 @@ apiClient.interceptors.request.use(
         config.headers['X-CSRFToken'] = csrfToken;
         console.log('Added CSRF token to request headers');
       } else {
-        console.warn('No CSRF token available for this request');
+        console.warn('No CSRF token available for this modifying request');
       }
     }
     

@@ -1,0 +1,574 @@
+react refresh:6 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+apiConfig.js:62 Initializing CSRF token on app load
+apiConfig.js:21 Retrieved CSRF token from cookies: Token found
+apiConfig.js:30 Using existing CSRF token
+authService.js:123 Initializing authentication state
+authService.js:95 Authentication check: {isAuthenticated: true, hasAuthToken: true, hasUserData: true, user: 'Yash@iitk.ac.in'}
+authService.js:127 User appears to be authenticated based on localStorage.
+index.js:12 Authentication initialized
+authService.js:95 Authentication check: {isAuthenticated: true, hasAuthToken: true, hasUserData: true, user: 'Yash@iitk.ac.in'}
+PrivateRoute.jsx:23 Rendering protected component for /waitlist
+authService.js:95 Authentication check: {isAuthenticated: true, hasAuthToken: true, hasUserData: true, user: 'Yash@iitk.ac.in'}
+PrivateRoute.jsx:23 Rendering protected component for /waitlist
+Waitlist.jsx:143 Attempting to load initial waitlist data...
+waitlistService.js:6 Fetching comprehensive waitlist data...
+Waitlist.jsx:279 Restaurant ID not yet available for WebSocket connection.
+PrivateRoute.jsx:13 PrivateRoute check (/waitlist): Authentication status: Authenticated
+Waitlist.jsx:143 Attempting to load initial waitlist data...
+waitlistService.js:6 Fetching comprehensive waitlist data...
+Waitlist.jsx:279 Restaurant ID not yet available for WebSocket connection.
+PrivateRoute.jsx:13 PrivateRoute check (/waitlist): Authentication status: Authenticated
+apiConfig.js:72 Making GET request to /api/waitlist/entries/data_with_qr/
+apiConfig.js:79 Added Auth Token to request headers
+apiConfig.js:88 Authentication status: Authenticated
+apiConfig.js:21 Retrieved CSRF token from cookies: Token found
+apiConfig.js:72 Making GET request to /api/waitlist/entries/data_with_qr/
+apiConfig.js:79 Added Auth Token to request headers
+apiConfig.js:88 Authentication status: Authenticated
+apiConfig.js:21 Retrieved CSRF token from cookies: Token found
+waitlistService.js:8 
+        
+        
+       GET http://localhost:8000/api/waitlist/entries/data_with_qr/ 500 (Internal Server Error)
+dispatchXhrRequest @ xhr.js:195
+xhr @ xhr.js:15
+dispatchRequest @ dispatchRequest.js:51
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+getWaitlistData @ waitlistService.js:8
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+commitPassiveMountOnFiber @ react-dom-client.development.js:12652
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12657
+flushPassiveEffects @ react-dom-client.development.js:15460
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+apiConfig.js:135 Error 500 from /api/waitlist/entries/data_with_qr/: <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>ProgrammingError
+          at /api/waitlist/entries/data_with_qr/</title>
+  <style>
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font-family: sans-serif; background-color:#fff; color:#000; }
+    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; }
+    h2 { margin-bottom:.8em; }
+    h3 { margin:1em 0 .5em 0; }
+    h4 { margin:0 0 .5em 0; font-weight: normal; }
+    code, pre { font-size: 100%; white-space: pre-wrap; word-break: break-word; }
+    summary { cursor: pointer; }
+    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }
+    tbody td, tbody th { vertical-align:top; padding:2px 3px; }
+    thead th {
+      padding:1px 6px 1px 3px; background:#fefefe; text-align:left;
+      font-weight:normal; font-size: 0.6875rem; border:1px solid #ddd;
+    }
+    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    table.vars { margin:5px 10px 2px 40px; width: auto; }
+    table.vars td, table.req td { font-family:monospace; }
+    table td.code { width:100%; }
+    table td.code pre { overflow:hidden; }
+    table.source th { color:#666; }
+    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }
+    ul.traceback { list-style-type:none; color: #222; }
+    ul.traceback li.cause { word-break: break-word; }
+    ul.traceback li.frame { padding-bottom:1em; color:#4f4f4f; }
+    ul.traceback li.user { background-color:#e0e0e0; color:#000 }
+    div.context { padding:10px 0; overflow:hidden; }
+    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }
+    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; padding-left: 2px; }
+    div.context ol li pre { display:inline; }
+    div.context ol.context-line li { color:#464646; background-color:#dfdfdf; padding: 3px 2px; }
+    div.context ol.context-line li span { position:absolute; right:32px; }
+    .user div.context ol.context-line li { background-color:#bbb; color:#000; }
+    .user div.context ol li { color:#666; }
+    div.commands, summary.commands { margin-left: 40px; }
+    div.commands a, summary.commands { color:#555; text-decoration:none; }
+    .user div.commands a { color: black; }
+    #summary { background: #ffc; }
+    #summary h2 { font-weight: normal; color: #666; }
+    #info { padding: 0; }
+    #info > * { padding:10px 20px; }
+    #explanation { background:#eee; }
+    #template, #template-not-exist { background:#f6f6f6; }
+    #template-not-exist ul { margin: 0 0 10px 20px; }
+    #template-not-exist .postmortem-section { margin-bottom: 3px; }
+    #unicode-hint { background:#eee; }
+    #traceback { background:#eee; }
+    #requestinfo { background:#f6f6f6; padding-left:120px; }
+    #summary table { border:none; background:transparent; }
+    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }
+    #requestinfo h3 { margin-bottom:-1em; }
+    .error { background: #ffc; }
+    .specific { color:#cc3300; font-weight:bold; }
+    h2 span.commands { font-size: 0.7rem; font-weight:normal; }
+    span.commands a:link {color:#5E5694;}
+    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5rem; margin: 10px 0 10px 0; }
+    .append-bottom { margin-bottom: 10px; }
+    .fname { user-select: all; }
+  </style>
+  
+  <script>
+    function hideAll(elems) {
+      for (var e = 0; e < elems.length; e++) {
+        elems[e].style.display = 'none';
+      }
+    }
+    window.onload = function() {
+      hideAll(document.querySelectorAll('ol.pre-context'));
+      hideAll(document.querySelectorAll('ol.post-context'));
+      hideAll(document.querySelectorAll('div.pastebin'));
+    }
+    function toggle() {
+      for (var i = 0; i < arguments.length; i++) {
+        var e = document.getElementById(arguments[i]);
+        if (e) {
+          e.style.display = e.style.display == 'none' ? 'block': 'none';
+        }
+      }
+      return false;
+    }
+    function switchPastebinFriendly(link) {
+      s1 = "Switch to copy-and-paste view";
+      s2 = "Switch back to interactive view";
+      link.textContent = link.textContent.trim() == s1 ? s2: s1;
+      toggle('browserTraceback', 'pastebinTraceback');
+      return false;
+    }
+  </script>
+  
+</head>
+<body>
+<header id="summary">
+  <h1>ProgrammingError
+       at /api/waitlist/entries/data_with_qr/</h1>
+  <pre class="exception_value">column waitlist_waitlistentry.notified_at does not exist
+LINE 1: ....&quot;notes&quot;, &quot;waitlist_waitlistentry&quot;.&quot;quoted_time&quot;, &quot;waitlist_...
+                                                             ^
+</pre>
+  <table class="meta">
+
+    <tr>
+      <th scope="row">Request Method:</th>
+      <td>GET</td>
+    </tr>
+    <tr>
+      <th scope
+(anonymous) @ apiConfig.js:135
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+getWaitlistData @ waitlistService.js:8
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+commitPassiveMountOnFiber @ react-dom-client.development.js:12652
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12657
+flushPassiveEffects @ react-dom-client.development.js:15460
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+waitlistService.js:12 Error fetching comprehensive waitlist data: AxiosError {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
+getWaitlistData @ waitlistService.js:12
+await in getWaitlistData
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+commitPassiveMountOnFiber @ react-dom-client.development.js:12652
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12657
+flushPassiveEffects @ react-dom-client.development.js:15460
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+Waitlist.jsx:176 Error loading waitlist data: AxiosError {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
+(anonymous) @ Waitlist.jsx:176
+await in (anonymous)
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+commitPassiveMountOnFiber @ react-dom-client.development.js:12652
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12646
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12755
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:12625
+commitPassiveMountOnFiber @ react-dom-client.development.js:12657
+flushPassiveEffects @ react-dom-client.development.js:15460
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+waitlistService.js:8 
+        
+        
+       GET http://localhost:8000/api/waitlist/entries/data_with_qr/ 500 (Internal Server Error)
+dispatchXhrRequest @ xhr.js:195
+xhr @ xhr.js:15
+dispatchRequest @ dispatchRequest.js:51
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+getWaitlistData @ waitlistService.js:8
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+reconnectPassiveEffects @ react-dom-client.development.js:12802
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15692
+runWithFiberInDEV @ react-dom-client.development.js:543
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15653
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15705
+flushPassiveEffects @ react-dom-client.development.js:15470
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+apiConfig.js:135 Error 500 from /api/waitlist/entries/data_with_qr/: <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>ProgrammingError
+          at /api/waitlist/entries/data_with_qr/</title>
+  <style>
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font-family: sans-serif; background-color:#fff; color:#000; }
+    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; }
+    h2 { margin-bottom:.8em; }
+    h3 { margin:1em 0 .5em 0; }
+    h4 { margin:0 0 .5em 0; font-weight: normal; }
+    code, pre { font-size: 100%; white-space: pre-wrap; word-break: break-word; }
+    summary { cursor: pointer; }
+    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }
+    tbody td, tbody th { vertical-align:top; padding:2px 3px; }
+    thead th {
+      padding:1px 6px 1px 3px; background:#fefefe; text-align:left;
+      font-weight:normal; font-size: 0.6875rem; border:1px solid #ddd;
+    }
+    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    table.vars { margin:5px 10px 2px 40px; width: auto; }
+    table.vars td, table.req td { font-family:monospace; }
+    table td.code { width:100%; }
+    table td.code pre { overflow:hidden; }
+    table.source th { color:#666; }
+    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }
+    ul.traceback { list-style-type:none; color: #222; }
+    ul.traceback li.cause { word-break: break-word; }
+    ul.traceback li.frame { padding-bottom:1em; color:#4f4f4f; }
+    ul.traceback li.user { background-color:#e0e0e0; color:#000 }
+    div.context { padding:10px 0; overflow:hidden; }
+    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }
+    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; padding-left: 2px; }
+    div.context ol li pre { display:inline; }
+    div.context ol.context-line li { color:#464646; background-color:#dfdfdf; padding: 3px 2px; }
+    div.context ol.context-line li span { position:absolute; right:32px; }
+    .user div.context ol.context-line li { background-color:#bbb; color:#000; }
+    .user div.context ol li { color:#666; }
+    div.commands, summary.commands { margin-left: 40px; }
+    div.commands a, summary.commands { color:#555; text-decoration:none; }
+    .user div.commands a { color: black; }
+    #summary { background: #ffc; }
+    #summary h2 { font-weight: normal; color: #666; }
+    #info { padding: 0; }
+    #info > * { padding:10px 20px; }
+    #explanation { background:#eee; }
+    #template, #template-not-exist { background:#f6f6f6; }
+    #template-not-exist ul { margin: 0 0 10px 20px; }
+    #template-not-exist .postmortem-section { margin-bottom: 3px; }
+    #unicode-hint { background:#eee; }
+    #traceback { background:#eee; }
+    #requestinfo { background:#f6f6f6; padding-left:120px; }
+    #summary table { border:none; background:transparent; }
+    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }
+    #requestinfo h3 { margin-bottom:-1em; }
+    .error { background: #ffc; }
+    .specific { color:#cc3300; font-weight:bold; }
+    h2 span.commands { font-size: 0.7rem; font-weight:normal; }
+    span.commands a:link {color:#5E5694;}
+    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5rem; margin: 10px 0 10px 0; }
+    .append-bottom { margin-bottom: 10px; }
+    .fname { user-select: all; }
+  </style>
+  
+  <script>
+    function hideAll(elems) {
+      for (var e = 0; e < elems.length; e++) {
+        elems[e].style.display = 'none';
+      }
+    }
+    window.onload = function() {
+      hideAll(document.querySelectorAll('ol.pre-context'));
+      hideAll(document.querySelectorAll('ol.post-context'));
+      hideAll(document.querySelectorAll('div.pastebin'));
+    }
+    function toggle() {
+      for (var i = 0; i < arguments.length; i++) {
+        var e = document.getElementById(arguments[i]);
+        if (e) {
+          e.style.display = e.style.display == 'none' ? 'block': 'none';
+        }
+      }
+      return false;
+    }
+    function switchPastebinFriendly(link) {
+      s1 = "Switch to copy-and-paste view";
+      s2 = "Switch back to interactive view";
+      link.textContent = link.textContent.trim() == s1 ? s2: s1;
+      toggle('browserTraceback', 'pastebinTraceback');
+      return false;
+    }
+  </script>
+  
+</head>
+<body>
+<header id="summary">
+  <h1>ProgrammingError
+       at /api/waitlist/entries/data_with_qr/</h1>
+  <pre class="exception_value">column waitlist_waitlistentry.notified_at does not exist
+LINE 1: ....&quot;notes&quot;, &quot;waitlist_waitlistentry&quot;.&quot;quoted_time&quot;, &quot;waitlist_...
+                                                             ^
+</pre>
+  <table class="meta">
+
+    <tr>
+      <th scope="row">Request Method:</th>
+      <td>GET</td>
+    </tr>
+    <tr>
+      <th scope
+(anonymous) @ apiConfig.js:135
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+getWaitlistData @ waitlistService.js:8
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+reconnectPassiveEffects @ react-dom-client.development.js:12802
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15692
+runWithFiberInDEV @ react-dom-client.development.js:543
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15653
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15705
+flushPassiveEffects @ react-dom-client.development.js:15470
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+waitlistService.js:12 Error fetching comprehensive waitlist data: AxiosError {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
+getWaitlistData @ waitlistService.js:12
+await in getWaitlistData
+(anonymous) @ Waitlist.jsx:149
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+reconnectPassiveEffects @ react-dom-client.development.js:12802
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15692
+runWithFiberInDEV @ react-dom-client.development.js:543
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15653
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15705
+flushPassiveEffects @ react-dom-client.development.js:15470
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44
+Waitlist.jsx:176 Error loading waitlist data: AxiosError {message: 'Request failed with status code 500', name: 'AxiosError', code: 'ERR_BAD_RESPONSE', config: {…}, request: XMLHttpRequest, …}
+(anonymous) @ Waitlist.jsx:176
+await in (anonymous)
+(anonymous) @ Waitlist.jsx:192
+react-stack-bottom-frame @ react-dom-client.development.js:22509
+runWithFiberInDEV @ react-dom-client.development.js:543
+commitHookEffectListMount @ react-dom-client.development.js:10739
+commitHookPassiveMountEffects @ react-dom-client.development.js:10876
+reconnectPassiveEffects @ react-dom-client.development.js:12802
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12795
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:12773
+reconnectPassiveEffects @ react-dom-client.development.js:12849
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15692
+runWithFiberInDEV @ react-dom-client.development.js:543
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15653
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15705
+flushPassiveEffects @ react-dom-client.development.js:15470
+(anonymous) @ react-dom-client.development.js:15324
+performWorkUntilDeadline @ scheduler.development.js:44

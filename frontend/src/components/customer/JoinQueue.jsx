@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRestaurant, joinQueueSubmit, checkPhoneInWaitlist } from '../../services/customerQueueService';
+import { getJoinQueuePageData, joinQueueSubmit, checkPhoneInWaitlist } from '../../services/customerQueueService';
 
 const JoinQueue = () => {
   const { restaurantId } = useParams();
@@ -15,6 +15,17 @@ const JoinQueue = () => {
   const [restaurant, setRestaurant] = useState(null);
   const [phoneExists, setPhoneExists] = useState(false);
   const [phoneValid, setPhoneValid] = useState(true);
+  const [toastMessage, setToastMessage] = useState(null); // For toast-like messages
+  
+  // Function to display a temporary message (acting like a toast)
+  const showToast = (message, type = 'error') => { // type can be 'error', 'success', 'info'
+    setToastMessage({ text: message, type });
+    setTimeout(() => {
+      setToastMessage(null);
+      if (type === 'error') setError(message); // Keep main error state for form validation feedback
+      else setError(null); // Clear main error if success/info toast
+    }, 5000); // Hide after 5 seconds
+  };
   
   // Format phone number as user types
   const formatPhoneNumber = (input) => {
@@ -42,7 +53,7 @@ const JoinQueue = () => {
   
   useEffect(() => {
     // Fetch restaurant details
-    const fetchRestaurant = async () => {
+    const fetchRestaurantDetails = async () => {
       try {
         if (!restaurantId) {
           console.error('Missing restaurant ID');
@@ -50,13 +61,13 @@ const JoinQueue = () => {
           return;
         }
         
-        console.log('Fetching restaurant details for ID:', restaurantId);
-        const data = await getRestaurant(restaurantId);
-        console.log('Restaurant data received:', data);
+        console.log('Fetching join queue page data for ID:', restaurantId);
+        const data = await getJoinQueuePageData(restaurantId);
+        console.log('Join queue page data received:', data);
         
-        if (!data || !data.success || !data.restaurant || !data.restaurant.name) {
+        if (!data || !data.restaurant || !data.restaurant.name) {
           console.error('Invalid restaurant data received:', data);
-          setError('Could not load restaurant information. Invalid data received.');
+          setError('Could not load restaurant information. Invalid data from server.');
           return;
         }
         
@@ -77,7 +88,7 @@ const JoinQueue = () => {
       }
     };
     
-    fetchRestaurant();
+    fetchRestaurantDetails();
   }, [restaurantId]);
   
   const handleCheckPhoneExists = async (phone) => {
@@ -122,74 +133,55 @@ const JoinQueue = () => {
     setError(null);
     
     try {
-      // Get only digits for submission to backend
       const digitsOnlyPhone = phoneNumber.replace(/\D/g, '');
       
-      // Create form data
-      const formData = new FormData();
-      formData.append('customer_name', customerName);
-      formData.append('phone_number', digitsOnlyPhone);
-      formData.append('people_count', String(peopleCount));
-      if (notes) {
-        formData.append('notes', notes);
-      }
+      // Create JSON payload
+      const customerData = {
+        customer_name: customerName,
+        phone_number: digitsOnlyPhone, // Backend expects unformatted digits
+        people_count: peopleCount, // Changed: peopleCount is already a number
+        notes: notes || '' // Ensure notes is not undefined if empty
+      };
       
-      // Use joinQueueSubmit instead of joinQueue
-      const result = await joinQueueSubmit(restaurantId, formData);
+      // Use joinQueueSubmit with JSON data
+      const result = await joinQueueSubmit(restaurantId, customerData);
       
       if (result.success && result.queue_entry_id) {
         // Navigate to the confirmation page
         navigate(`/join-queue/${restaurantId}/queue-confirmation/${result.queue_entry_id}/`);
+      } else if (result.success && result.confirmation_url_segment) { // Fallback if queue_entry_id not directly available but confirmation URL is
+        navigate(`/c/${result.confirmation_url_segment}`); // Assuming a route like /c/:segment
       } else if (result.success) {
-        // Navigate back to restaurant home if we don't have a queue_entry_id
-        alert('Successfully joined the queue, but could not retrieve the queue entry ID.');
-        navigate(`/join-queue/${restaurantId}/`);
+        // Generic success but no clear next step from result
+        showToast('Successfully joined the queue! Check your phone for updates.', 'success');
+        // Potentially navigate to a generic success page or restaurant page
+        // navigate(`/some-success-page-for/${restaurantId}`);
+        setTimeout(() => navigate(`/`), 5000); // Temp: navigate to home after delay
       } else {
-        setError('Failed to join the queue');
+        // Handle specific errors from backend if available in result.message or result.errors
+        const message = result.message || (result.errors ? JSON.stringify(result.errors) : 'Failed to join the queue. Please try again.');
+        setError(message); // Set main error for form feedback
+        showToast(message, 'error');
       }
     } catch (error) {
       console.error('Error joining queue:', error);
-      
-      // Attempt to check waitlist to see if the entry was added despite the error
-      // This is a backup in case the server adds the entry but returns an error
-      try {
-        // If we get here and the phone number was already added, we'll redirect to avoid duplicate submissions
-        const checkResult = await checkPhoneInWaitlist(restaurantId, phoneNumber);
-        if (checkResult.exists) {
-          alert('Your entry has been added to the waitlist. Redirecting to home page.');
-          navigate(`/join-queue/${restaurantId}/`);
-          return;
+      let errorMessage = 'Failed to join the queue. Please try again.';
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        // DRF validation errors might be nested in error.field_name or error.detail
+        if (error.phone_number) errorMessage = `Phone number: ${error.phone_number.join(', ')}`;
+        else if (error.customer_name) errorMessage = `Name: ${error.customer_name.join(', ')}`;
+        else if (error.people_count) errorMessage = `Party size: ${error.people_count.join(', ')}`;
+        else if (error.detail) errorMessage = error.detail;
+        else if (error.message) errorMessage = error.message;
+        else if (Object.keys(error).length > 0) { // Catch all for other object errors
+            errorMessage = Object.entries(error).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
         }
-      } catch (checkError) {
-        console.error('Error checking phone after failed submission:', checkError);
       }
-      
-      // Enhanced error handling
-      if (error.data && error.data.errors) {
-        const formErrors = error.data.errors;
-        
-        if (formErrors.phone_number) {
-          setError(`Phone number error: ${formErrors.phone_number[0]}`);
-          setPhoneValid(false);
-        } else if (formErrors.customer_name) {
-          setError(`Name error: ${formErrors.customer_name[0]}`);
-        } else {
-          // Join all error messages into a single string
-          const errorMessages = Object.entries(formErrors)
-            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
-            .join(', ');
-          
-          setError(`Form validation failed: ${errorMessages}`);
-        }
-      } else if (error.status === 400) {
-        setError('Please check your form inputs and try again');
-      } else if (error.status === 403) {
-        setError('Permission denied. The server refused your request.');
-      } else if (error.status === 500) {
-        setError('Server error. Please try again later.');
-      } else {
-        setError(error.message || 'Failed to join the queue');
-      }
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+      // Keep setLoading(false) in a finally block if complex logic added before it here
     } finally {
       setLoading(false);
     }
@@ -242,8 +234,14 @@ const JoinQueue = () => {
             <p className="text-gray-600 mt-1">Join the waiting list</p>
           </div>
           
-          {/* Error Message */}
-          {error && (
+          {/* Toast/Error Message Display */}
+          {toastMessage && (
+            <div className={`p-4 m-4 rounded-md ${toastMessage.type === 'error' ? 'bg-red-100 border-red-500 text-red-700' : 'bg-green-100 border-green-500 text-green-700'} border-l-4`}>
+              <p>{toastMessage.text}</p>
+            </div>
+          )}
+          {/* Fallback for main error if not shown by toast yet or if toast is different */}
+          {error && !toastMessage && (
             <div className="p-4 bg-white">
               <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded mb-4">
                 <p className="text-sm text-red-700">{error}</p>

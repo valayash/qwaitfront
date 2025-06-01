@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import * as dateFns from 'date-fns';
 import {
@@ -8,6 +8,7 @@ import {
   deleteReservation,
   checkInReservation
 } from '../../services/reservationService';
+import { getCurrentUser } from '../../services/authService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
@@ -50,9 +51,10 @@ const Toast = ({ message, type, onClose }) => {
 
 const Reservations = () => {
   // State for reservation data
+  const [userRestaurantId, setUserRestaurantId] = useState(null);
   const [restaurantName, setRestaurantName] = useState('Restaurant');
-  const [groupedReservations, setGroupedReservations] = useState({});
-  const [dates, setDates] = useState([]);
+  const [reservationsForSelectedDate, setReservationsForSelectedDate] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(dateFns.format(new Date(), 'yyyy-MM-dd'));
   const [isLoading, setIsLoading] = useState(true);
   
   // UI state
@@ -66,7 +68,6 @@ const Reservations = () => {
   // Form state
   const [formValues, setFormValues] = useState({
     name: '',
-    email: '',
     phone: '',
     party_size: 2,
     date: '',
@@ -74,10 +75,46 @@ const Reservations = () => {
     notes: ''
   });
   
-  // Load reservation data on component mount
+  // Load user info and then reservations
   useEffect(() => {
-    loadReservations();
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.restaurant_id) {
+      setUserRestaurantId(currentUser.restaurant_id);
+      setRestaurantName(currentUser.restaurant_name || 'My Restaurant');
+    } else {
+      showToast('Restaurant information not found. Please log in again.', 'error');
+    }
   }, []);
+
+  const loadReservations = useCallback(async (dateStr) => {
+    if (!userRestaurantId) {
+      showToast('Restaurant ID not available to fetch reservations.', 'error');
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const data = await fetchReservations(userRestaurantId, dateStr);
+      if (data && data.reservations) {
+        setReservationsForSelectedDate(data.reservations);
+      } else {
+        setReservationsForSelectedDate([]);
+        showToast(`No reservations found for ${dateStr} or error in response.`, 'warning');
+      }
+    } catch (error) {
+      console.error('Failed to load reservations:', error);
+      showToast(`Failed to load reservations for ${dateStr}: ${error.message || 'Server error'}`, 'error');
+      setReservationsForSelectedDate([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userRestaurantId]);
+
+  useEffect(() => {
+    if (userRestaurantId && selectedDate) {
+      loadReservations(selectedDate);
+    }
+  }, [selectedDate, userRestaurantId, loadReservations]);
   
   // Function to show toast messages
   const showToast = (message, type = 'success') => {
@@ -89,54 +126,16 @@ const Reservations = () => {
     setToast(null);
   };
   
-  // Format time ago from date
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    return dateFns.formatDistanceToNow(date, { addSuffix: true });
-  };
-  
-  // Load reservations data from the API
-  const loadReservations = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchReservations();
-      // Use restaurant name from response or fallback to default
-      setRestaurantName(data.restaurant?.name || 'My Restaurant');
-      setGroupedReservations(data.grouped_reservations || {});
-      setDates(Object.keys(data.grouped_reservations || {}).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()));
-    } catch (error) {
-      console.error('Failed to load reservations:', error);
-      showToast('Failed to load reservations', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   // Filter reservations based on search
   const getFilteredReservations = () => {
-    if (!search.trim()) return groupedReservations;
+    if (!reservationsForSelectedDate) return [];
+    if (!search.trim()) return reservationsForSelectedDate;
     
-    const filtered = {};
-    
-    dates.forEach(date => {
-      const matchingReservations = groupedReservations[date].filter(
-        reservation => reservation.name.toLowerCase().includes(search.toLowerCase()) ||
-                       reservation.email.toLowerCase().includes(search.toLowerCase()) ||
-                       reservation.phone.includes(search)
-      );
-      
-      if (matchingReservations.length > 0) {
-        filtered[date] = matchingReservations;
-      }
-    });
-    
-    return filtered;
-  };
-  
-  // Get all dates with filtered reservations
-  const getFilteredDates = () => {
-    const filteredReservations = getFilteredReservations();
-    return Object.keys(filteredReservations).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    return reservationsForSelectedDate.filter(
+      reservation => 
+        (reservation.name && reservation.name.toLowerCase().includes(search.toLowerCase())) ||
+        (reservation.phone && reservation.phone.includes(search))
+    );
   };
   
   // Open modal to add a new reservation
@@ -151,7 +150,6 @@ const Reservations = () => {
     
     setFormValues({
       name: '',
-      email: '',
       phone: '',
       party_size: 2,
       date: dateFns.format(tomorrow, 'yyyy-MM-dd'),
@@ -173,7 +171,6 @@ const Reservations = () => {
     
     setFormValues({
       name: reservation.name,
-      email: reservation.email,
       phone: reservation.phone,
       party_size: reservation.party_size,
       date: reservation.date,
@@ -201,43 +198,49 @@ const Reservations = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (!userRestaurantId) {
+      showToast('Cannot save reservation: Restaurant ID missing.', 'error');
+      return;
+    }
     setIsLoading(true);
-    
+    const payload = { ...formValues };
+
     try {
       if (isEdit && currentReservationId) {
-        // Edit existing reservation
-        const response = await editReservation(currentReservationId, formValues);
+        const response = await editReservation(currentReservationId, payload);
         
         if (response.success) {
           showToast('Reservation updated successfully', 'success');
           closeModal();
-          loadReservations();
+          loadReservations(selectedDate);
         } else {
           showToast(response.message || 'Failed to update reservation', 'error');
         }
       } else {
-        // Add new reservation
-        const response = await addReservation(formValues);
+        const response = await addReservation(userRestaurantId, payload);
         
         if (response.success) {
           showToast('Reservation added successfully', 'success');
           closeModal();
-          loadReservations();
+          if (payload.date === selectedDate) {
+            loadReservations(selectedDate);
+          } else {
+            setSelectedDate(payload.date);
+          }
         } else {
           showToast(response.message || 'Failed to add reservation', 'error');
         }
       }
     } catch (error) {
       console.error('Error saving reservation:', error);
-      showToast('Failed to save reservation', 'error');
+      showToast('Failed to save reservation: ' + (error.message || 'Server error'), 'error');
     } finally {
       setIsLoading(false);
     }
   };
   
   // Handle reservation deletion
-  const handleDelete = async (reservationId) => {
+  const handleDelete = async (reservationId, reservationDate) => {
     if (!window.confirm('Are you sure you want to delete this reservation?')) {
       return;
     }
@@ -249,7 +252,9 @@ const Reservations = () => {
       
       if (response.success) {
         showToast('Reservation deleted successfully', 'success');
-        loadReservations();
+        if (reservationDate === selectedDate) {
+          loadReservations(selectedDate);
+        }
       } else {
         showToast(response.message || 'Failed to delete reservation', 'error');
       }
@@ -263,18 +268,17 @@ const Reservations = () => {
   
   // Handle reservation check-in
   const handleCheckIn = async (reservationId) => {
-    if (!window.confirm('Check in this reservation?')) {
+    if (!userRestaurantId) {
+      showToast('Cannot check-in reservation: Restaurant ID missing.', 'error');
       return;
     }
-    
     setIsLoading(true);
-    
     try {
       const response = await checkInReservation(reservationId);
       
       if (response.success) {
         showToast('Reservation checked in successfully', 'success');
-        loadReservations();
+        loadReservations(selectedDate);
       } else {
         showToast(response.message || 'Failed to check in reservation', 'error');
       }
@@ -388,107 +392,114 @@ const Reservations = () => {
         </header>
 
         {/* Reservations Section */}
-        <div className="p-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header with search and add button */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <input 
+                type="text" 
+                placeholder="Search by name, phone..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-64 mr-4"
+              />
+              <input 
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border rounded-lg px-4 py-2"
+              />
+            </div>
+            <button onClick={openAddModal} className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 flex items-center">
+              <FontAwesomeIcon icon={faPlus} className="mr-2" /> Add Reservation
+            </button>
+          </div>
+
+          {/* Reservations List */}
           {isLoading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
-          ) : getFilteredDates().length > 0 ? (
-            getFilteredDates().map(date => (
-              <div key={date} className="mb-8">
-                <h2 className={`text-lg font-semibold mb-4 ${isToday(date) ? 'text-blue-600' : 'text-gray-800'}`}>
-                  {formatDate(date)}
-                  {isToday(date) && ' (Today)'}
-                </h2>
-                
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party Size</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {getFilteredReservations()[date].map(reservation => (
-                        <tr key={reservation.id} className={reservation.status === 'checked_in' ? 'bg-green-50' : ''}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {reservation.time}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap font-medium">
-                            {reservation.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {reservation.party_size}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div>{reservation.phone}</div>
-                            <div className="text-sm text-gray-500">{reservation.email}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {reservation.notes || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                              ${reservation.status === 'active' ? 'bg-yellow-100 text-yellow-800' : 
-                                reservation.status === 'checked_in' ? 'bg-green-100 text-green-800' : 
-                                'bg-gray-100 text-gray-800'}`}>
-                              {reservation.status_display}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+          ) : getFilteredReservations().length > 0 ? (
+            <div> {/** Single container for the selected date's reservations **/} 
+              <h2 className={`text-xl font-semibold mb-4 ${isToday(selectedDate) ? 'text-blue-600' : 'text-gray-800'}`}>
+                Reservations for: {formatDate(selectedDate)}
+                {isToday(selectedDate) && ' (Today)'}
+              </h2>
+              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {getFilteredReservations().map(reservation => (
+                      <tr key={reservation.id} className={reservation.checked_in ? 'bg-green-50' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {dateFns.format(new Date(`${reservation.date}T${reservation.time}`), 'p')} {/** Format time **/} 
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-medium">
+                          {reservation.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {reservation.party_size}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>{reservation.phone}</div>
+                          {/* email removed */}
+                        </td>
+                        <td className="px-6 py-4">
+                          {reservation.notes || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            ${reservation.checked_in ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {reservation.checked_in ? 'Checked In' : 'Pending'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                          {!reservation.checked_in && (
                             <button
                               onClick={() => handleCheckIn(reservation.id)}
                               className="text-green-600 hover:text-green-900 mr-2"
-                              disabled={reservation.status === 'checked_in'}
                               title="Check In"
                             >
                               <FontAwesomeIcon icon={faCheck} />
                             </button>
-                            <button
-                              onClick={() => openEditModal(reservation)}
-                              className="text-blue-600 hover:text-blue-900 mr-2"
-                              title="Edit"
-                            >
-                              <FontAwesomeIcon icon={faEdit} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(reservation.id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete"
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          )}
+                          <button
+                            onClick={() => openEditModal(reservation)}
+                            className="text-blue-600 hover:text-blue-900 mr-2"
+                            title="Edit"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(reservation.id, reservation.date)} // Pass date for reload logic
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))
+            </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <FontAwesomeIcon icon={faCalendarAlt} className="text-6xl" />
-              </div>
-              <h3 className="text-xl font-medium text-gray-800 mb-2">No reservations found</h3>
-              <p className="text-gray-600 mb-6">
-                {search.trim() ? 'No reservations match your search.' : 'No upcoming reservations.'}
-              </p>
-              {search.trim() && (
-                <button
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                  onClick={() => setSearch('')}
-                >
-                  Clear search
-                </button>
-              )}
+            <div className="text-center py-10">
+              <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400 text-4xl mb-4" />
+              <p className="text-gray-600">No reservations found for {formatDate(selectedDate)}.</p>
+              <p className="text-sm text-gray-500">Try selecting a different date or adding a new reservation.</p>
             </div>
           )}
         </div>
@@ -496,7 +507,7 @@ const Reservations = () => {
       
       {/* Reservation Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
             <div className="px-6 py-4 border-b flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">{modalTitle}</h2>
@@ -516,18 +527,6 @@ const Reservations = () => {
                     id="name"
                     name="name"
                     value={formValues.name}
-                    onChange={handleInputChange}
-                    className="border rounded-lg px-4 py-2 w-full"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    id="email"
-                    name="email"
-                    value={formValues.email}
                     onChange={handleInputChange}
                     className="border rounded-lg px-4 py-2 w-full"
                     required

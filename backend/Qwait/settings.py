@@ -40,7 +40,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'channels',
+    'rest_framework',
+    'rest_framework.authtoken',
     'restaurant_app',
+    'waitlist',
+    'auth_settings',
+    'analytics',
+    'recent',
+    'parties',
+    'reservation',
+    'customer_interface',
+    'notifications',
 ]
 
 ASGI_APPLICATION = 'Qwait.asgi.application' 
@@ -61,9 +71,11 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": False,
     "icons": {
         "restaurant_app.Restaurant": "fas fa-utensils",
-        "restaurant_app.QueueEntry": "fas fa-list-alt",
+        "waitlist.WaitlistEntry": "fas fa-list-alt",
         "restaurant_app.Party": "fas fa-users",
-        "restaurant_app.Reservation": "fas fa-calendar-alt",
+        "reservation.Reservation": "fas fa-calendar-alt",
+        "auth.User": "fas fa-user-cog",
+        "authtoken.TokenProxy": "fas fa-key",
     },
     "custom_css": "css/admin_custom.css",
 }
@@ -165,11 +177,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
-AUTH_USER_MODEL = 'restaurant_app.CustomUser'
+AUTH_USER_MODEL = 'auth_settings.CustomUser'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'restaurant_app.backends.EmailBackend'
+    'auth_settings.backends.EmailBackend'
 ]
+
+# Django REST framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    # You might want to add other settings like default pagination, renderers, parsers, etc.
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 10
+}
 
 # Configure Django messages to use session-based storage
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getQueueConfirmation, removeFromQueue } from '../../services/customerQueueService';
+import { getQueueConfirmationDetails, leaveQueue } from '../../services/customerQueueService';
 
 const QueueConfirmation = () => {
   const { restaurantId, queueEntryId } = useParams();
@@ -25,7 +25,7 @@ const QueueConfirmation = () => {
         }
         
         // Fetch queue entry details
-        const data = await getQueueConfirmation(restaurantId, queueEntryId);
+        const data = await getQueueConfirmationDetails(restaurantId, queueEntryId);
         
         if (data && data.success) {
           setQueueEntry(data.queue_entry || {});
@@ -61,11 +61,13 @@ const QueueConfirmation = () => {
       try {
         setRemoving(true);
         
-        const result = await removeFromQueue(restaurantId, queueEntryId);
+        const result = await leaveQueue(restaurantId, queueEntryId);
         
         if (result.success) {
           alert('You have been removed from the queue');
-          if (restaurantId) {
+          if (result.redirect_url_segment) {
+            navigate(`/c/${result.redirect_url_segment}`);
+          } else if (restaurantId) {
             navigate(`/join-queue/${restaurantId}/`);
           } else {
             navigate('/');

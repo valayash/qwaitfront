@@ -1,78 +1,46 @@
+// frontend/src/services/partyService.js
+// This service is for managing Party model entries (customer history).
+// The Party model represents known customers and their visit history.
+
+// Most of its previous functions were related to old waitlist endpoints or need new backend DRF views for the Party model.
+// Functions like fetchPartyList (to list all known customers/parties for a restaurant),
+// updatePartyDetails (to update customer notes, etc.), and deletePartyRecord (to remove a customer record)
+// would require corresponding backend API endpoints (e.g., GET /api/parties/, PUT /api/parties/{id}/, DELETE /api/parties/{id}/).
+
+// For now, this service is a placeholder.
+// The `populate_parties` management command on the backend creates/updates Party records from WaitlistEntry history.
+// To view recently served parties (which contributes to Party data), see `fetchServedParties` in `reservationService.js`.
+
+// Example functions (require backend implementation):
+/*
 import apiClient from './apiConfig';
 
-const fetchParties = async (searchTerm = null) => {
+const fetchPartyList = async (restaurantId, searchTerm = null) => {
   try {
-    let url = '/parties/';
+    let url = `/api/restaurants/${restaurantId}/parties/`; // Example endpoint
     if (searchTerm) {
       url += `?search=${encodeURIComponent(searchTerm)}`;
     }
     const response = await apiClient.get(url);
     return response.data;
   } catch (error) {
-    console.error('Error fetching parties:', error);
+    console.error('Error fetching party list:', error);
     throw error;
   }
 };
 
-const addPartyToWaitlist = async (partyId, waitlistData) => {
+const updatePartyDetails = async (partyId, detailsData) => {
   try {
-    const formData = new FormData();
-    formData.append('party_id', partyId);
-    formData.append('quoted_time', waitlistData.quoted_time);
-    if (waitlistData.notes) {
-      formData.append('notes', waitlistData.notes);
-    }
-    
-    const response = await apiClient.post('/waitlist/add-party/', formData);
+    const response = await apiClient.put(`/api/parties/${partyId}/`, detailsData);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('Error adding party to waitlist:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to add party to waitlist'
-    };
+    console.error('Error updating party details:', error);
+    return { success: false, message: error.response?.data?.detail || 'Failed to update party' };
   }
 };
-
-const editParty = async (partyId, partyData) => {
-  try {
-    const formData = new FormData();
-    formData.append('name', partyData.name);
-    formData.append('phone', partyData.phone);
-    if (partyData.notes) {
-      formData.append('notes', partyData.notes);
-    }
-    
-    const response = await apiClient.post(`/waitlist/party/${partyId}/edit/`, formData);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error editing party:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to update party'
-    };
-  }
-};
-
-const deleteParty = async (partyId) => {
-  try {
-    const formData = new FormData();
-    formData.append('party_id', partyId);
-    
-    const response = await apiClient.post(`/parties/${partyId}/delete/`, formData);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Error deleting party:', error);
-    return { 
-      success: false, 
-      message: error.response?.data?.message || 'Failed to delete party'
-    };
-  }
-};
+*/
 
 export {
-  fetchParties,
-  addPartyToWaitlist,
-  editParty,
-  deleteParty
+  // fetchPartyList, 
+  // updatePartyDetails,
 }; 

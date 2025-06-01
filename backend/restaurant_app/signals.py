@@ -1,45 +1,24 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import QueueEntry, Party
+# from django.core.mail import send_mail # Not used by remaining signals
+from django.conf import settings # Keep for now, might be used by other logic or future signals
+from customer_interface.views import queue_entry_created
+# from .models import CustomUser, Restaurant # Old import
+# from auth_settings.models import CustomUser, Restaurant # Not needed if these signals don't directly use them
+# from parties.models import Party # No longer needed here, its update logic is in parties.signals
+from waitlist.models import WaitlistEntry # Used by handle_waitlist_entry_save
 
-# Import the custom signal
-from .views.customer_views import queue_entry_created
 import logging
 
 logger = logging.getLogger(__name__)
 
-@receiver(post_save, sender=QueueEntry)
-def update_party_from_queue_entry(sender, instance, created, **kwargs):
-    """
-    Update Party table when a QueueEntry is created or updated
-    """
-    # Skip if the phone number is empty
-    if not instance.phone_number:
-        return
-        
-    # Try to find an existing party with this phone number
-    party, party_created = Party.objects.get_or_create(
-        restaurant=instance.restaurant,
-        phone=instance.phone_number,
-        defaults={
-            'name': instance.customer_name,
-            'visits': 0,
-            'notes': instance.notes,
-            'last_visit': None,
-        }
-    )
-    
-    # Update party details with latest info
-    party.name = instance.customer_name  # Always use the most recent name
-    
-    # Update notes if provided
-    if instance.notes:
-        party.notes = instance.notes
-    
-    # If the QueueEntry is served, update visit count and last visit
-    if instance.status == 'SERVED':
-        party.visits += 1
-        party.last_visit = instance.timestamp
-    
-    party.save()
+# The update_party_from_waitlist_entry receiver has been moved to parties/signals.py
+# @receiver(post_save, sender=WaitlistEntry)
+# def update_party_from_waitlist_entry(sender, instance, created, **kwargs):
+#     """
+#     Update Party table (now in parties.models) when a WaitlistEntry is created or updated.
+#     """
+#     # ... logic moved ...
+#     pass
 
+# This file is now empty and can be deleted if no other WebSocket routing specific to `restaurant_app` is needed.

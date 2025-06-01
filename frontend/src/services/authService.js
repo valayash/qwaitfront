@@ -4,57 +4,51 @@ import apiClient from './apiConfig';
 const login = async (email, password) => {
   try {
     console.log('Attempting to log in user:', email);
-    
-    const response = await apiClient.post('/login/', {
+    // Backend now expects JSON and returns token directly
+    const response = await apiClient.post('/api/auth/login/', { // Updated URL
       email: email,
       password: password
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    }); // Removed Content-Type header, Axios default is good for JSON
     
-    // The response from the Django backend should now be JSON
-    if (response.data && response.data.success) {
+    if (response.data && response.data.token) { // Check for token
       console.log('Login successful, storing authentication data');
       
-      // Store auth data in localStorage
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify({
-        email: email,
-        name: response.data.name || email,
-        token: response.data.token || '',
-        lastLogin: new Date().toISOString()
+      localStorage.setItem('authToken', response.data.token); // Store the auth token
+      localStorage.setItem('user', JSON.stringify({ // Store user info
+        id: response.data.user?.id,
+        email: response.data.user?.email,
+        restaurant_id: response.data.restaurant_id,
+        restaurant_name: response.data.restaurant_name,
+        // lastLogin: new Date().toISOString() // lastLogin can be set if needed
       }));
       
       console.log('Successfully stored authentication data');
       
-      // Make a test request to verify authentication works
-      try {
-        const testResponse = await apiClient.get('/dashboard/');
-        console.log('Authentication verification successful:', testResponse.status);
-      } catch (verifyError) {
-        console.error('Authentication verification failed:', verifyError);
-        // Even if verification fails, we'll still consider login successful
-        // as the initial login request succeeded
-      }
+      // Optional: Make a test request to a known authenticated endpoint
+      // try {
+      //   const testResponse = await apiClient.get('/api/auth/some_protected_route/'); // Update test route
+      //   console.log('Authentication verification successful:', testResponse.status);
+      // } catch (verifyError) {
+      //   console.error('Authentication verification failed:', verifyError);
+      // }
       
       return {
         success: true,
-        data: response.data
+        data: response.data // Return all data from backend
       };
     } else {
-      // Unexpected response format
-      console.error('Login failed: Unexpected response format', response.data);
+      console.error('Login failed: Token not found in response', response.data);
       return {
         success: false,
-        message: response.data?.message || 'Unexpected response from server'
+        message: response.data?.message || response.data?.error || 'Login failed: Unexpected response from server'
       };
     }
   } catch (error) {
     console.error('Login error:', error);
     const errorMessage = error.response?.data?.message || 
                          error.response?.data?.error || 
+                         error.response?.data?.detail || // DRF often uses 'detail' for auth errors
                          'Failed to log in. Please check your credentials.';
     return {
       success: false,
@@ -67,38 +61,42 @@ const login = async (email, password) => {
 const logout = async () => {
   try {
     // Call the logout endpoint
-    const response = await apiClient.post('/logout/');
+    await apiClient.post('/api/auth/logout/'); // Updated URL
     
-    // Clear localStorage regardless of success
+    // Clear localStorage
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken'); // Remove the auth token
     
+    console.log('User logged out and local storage cleared.');
     return {
-      success: true,
-      data: response.data
+      success: true
     };
   } catch (error) {
     console.error('Logout error:', error);
     
-    // Still clear localStorage
+    // Still clear localStorage as a fallback
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
     
     return {
       success: false,
-      message: error.response?.data?.message || 'Failed to log out properly.'
+      message: error.response?.data?.message || error.response?.data?.detail || 'Failed to log out properly.'
     };
   }
 };
 
 // Function to check if a user is authenticated
 const isAuthenticated = () => {
-  const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+  const authToken = localStorage.getItem('authToken');
+  const authStatus = localStorage.getItem('isAuthenticated') === 'true' && !!authToken; // Check for token too
   const user = getCurrentUser();
   console.log('Authentication check:', { 
     isAuthenticated: authStatus, 
+    hasAuthToken: !!authToken,
     hasUserData: user !== null,
-    user: user ? `${user.name} (${user.email})` : 'No user data'
+    user: user ? `${user.email}` : 'No user data' // Simplified user display
   });
   return authStatus;
 };
@@ -111,62 +109,26 @@ const getCurrentUser = () => {
       return JSON.parse(userJson);
     } catch (e) {
       console.error('Error parsing user data from localStorage:', e);
+      localStorage.removeItem('user'); // Clear corrupted user data
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('authToken');
       return null;
     }
   }
   return null;
 };
 
-// Function to initialize authentication state
-const initializeAuth = async () => {
+// Function to initialize authentication state (simplified, can be enhanced)
+const initializeAuth = () => { // Removed async as test request is commented out for now
   console.log('Initializing authentication state');
   const authStatus = isAuthenticated();
   
   if (authStatus) {
-    console.log('User is already authenticated, verifying session validity');
-    
-    // Check when the user last logged in
-    const user = getCurrentUser();
-    if (user && user.lastLogin) {
-      const lastLogin = new Date(user.lastLogin);
-      const now = new Date();
-      const hoursSinceLogin = (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60);
-      
-      console.log(`Hours since last login: ${hoursSinceLogin.toFixed(2)}`);
-      
-      if (hoursSinceLogin > 24) {
-        // If more than 24 hours have passed, force re-authentication
-        console.log('Login session expired (>24 hours), clearing auth state');
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('user');
-        return false;
-      }
-      
-      // Verify that our session is still valid by making a test request
-      try {
-        console.log('Validating session with test request');
-        const response = await apiClient.get('/dashboard/');
-        console.log('Session validation successful:', response.status);
-        return true;
-      } catch (error) {
-        console.error('Session validation failed:', error);
-        if (error.response?.status === 302 || error.response?.status === 401) {
-          console.log('Clearing auth state due to redirect or unauthorized response');
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('user');
-          return false;
-        }
-      }
-    } else {
-      console.warn('User data invalid or missing lastLogin, clearing auth state');
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('user');
-      return false;
-    }
+    console.log('User appears to be authenticated based on localStorage.');
+    // More robust validation (e.g., token expiry check or API call) can be added here if needed
   } else {
-    console.log('User is not authenticated, will need to log in');
+    console.log('User is not authenticated.');
   }
-  
   return authStatus;
 };
 
@@ -174,32 +136,47 @@ const initializeAuth = async () => {
 const register = async (userData) => {
   try {
     console.log('Registering new user with data:', userData);
-    const formData = new FormData();
-    formData.append('email', userData.email);
-    formData.append('password', userData.password);
-    formData.append('confirm_password', userData.confirm_password);
-    formData.append('restaurant_name', userData.restaurant_name);
+    // Backend expects JSON
+    const response = await apiClient.post('/api/auth/register/', { // Updated URL
+      email: userData.email,
+      password: userData.password,
+      first_name: userData.first_name || '', // Add if your form collects these
+      last_name: userData.last_name || '',
+      restaurant_name: userData.restaurant_name
+    });
     
-    const response = await apiClient.post('/register/', formData);
-    
-    if (response.data && response.data.success) {
-      console.log('Registration successful:', response.data);
+    if (response.data && response.data.token) { // Backend now returns token on successful registration
+      console.log('Registration successful, storing auth token:', response.data);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.user_id,
+        email: response.data.email,
+        restaurant_id: response.data.restaurant_id,
+        restaurant_name: response.data.restaurant_name,
+      }));
       return {
         success: true,
         data: response.data
       };
     } else {
-      console.error('Registration failed:', response.data);
+      console.error('Registration failed: Token not found or other issue.', response.data);
       return {
         success: false,
-        message: response.data?.message || 'Failed to register. Please try again.'
+        message: response.data?.error || response.data?.detail || 'Failed to register. Please try again.'
       };
     }
   } catch (error) {
     console.error('Registration error:', error);
+    // Extract DRF validation errors if available
+    let errorMessage = error.response?.data?.detail || 'Failed to register. Please try again.';
+    if (error.response?.data && typeof error.response.data === 'object') {
+        const errors = Object.entries(error.response.data).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
+        if (errors) errorMessage = errors;
+    }
     return {
       success: false,
-      message: error.response?.data?.message || 'Failed to register. Please try again.'
+      message: errorMessage
     };
   }
 };
